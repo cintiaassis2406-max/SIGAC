@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Credenciadas
+{% endblock %}
+
+{% block conteudo %}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4">
+        🏥 Cadastro de Credenciadas
+    </h2>
+
+    <div class="card shadow mb-4">
+
+        <div class="card-header">
+            <strong>Nova Credenciada</strong>
+        </div>
+
+        <div class="card-body">
+
+            <form method="POST">
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Nome da Credenciada</label>
+                        <input type="text" name="nome" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Tipo de Cobrança</label>
+
+                        <select name="tipo" class="form-select">
+
+                            <option>Faturada</option>
+                            <option>Particular</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">E-mail</label>
+                        <input type="email" name="email" class="form-control">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Contato</label>
+                        <input type="text" name="contato" class="form-control">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Telefone</label>
+                        <input type="text" name="telefone" class="form-control">
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Observações da Credenciada</label>
+
+                        <textarea
+                            name="observacoes"
+                            class="form-control"
+                            rows="3"></textarea>
+
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Observações Internas</label>
+
+                        <textarea
+                            name="observacoes_internas"
+                            class="form-control"
+                            rows="3"></textarea>
+
+                    </div>
+
+                </div>
+
+                <button class="btn btn-success">
+                    💾 Salvar Credenciada
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <div class="card shadow">
+
+        <div class="card-header">
+            <strong>Credenciadas Cadastradas</strong>
+        </div>
+
+        <div class="card-body">
+
+            <form method="GET" class="mb-3">
+
+                <div class="input-group">
+
+                    <input
+                        type="text"
+                        name="pesquisa"
+                        class="form-control"
+                        placeholder="Pesquisar credenciada..."
+                        value="{{ pesquisa }}">
+
+                    <button class="btn btn-primary">
+                        🔍 Pesquisar
+                    </button>
+
+                </div>
+
+            </form>
+                        <table class="table table-bordered table-hover align-middle">
+
+                <thead class="table-dark">
+
+                    <tr>
+
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Situação Financeira</th>
+                        <th width="180">Ações</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for c in credenciadas %}
+
+                    <tr>
+
+                        <td>{{ c.nome }}</td>
+
+                        <td>{{ c.tipo_cobranca }}</td>
+
+                        <td>{{ c.situacao_financeira or "" }}</td>
+
+                        <td>
+
+                            <a
+                                href="/editar_credenciada/{{ c.id }}"
+                                class="btn btn-warning btn-sm">
+
+                                ✏️ Editar
+
+                            </a>
+
+                            <a
+                                href="/excluir_credenciada/{{ c.id }}"
+                                class="btn btn-danger btn-sm"
+                                onclick="return confirm('Deseja excluir esta credenciada?')">
+
+                                🗑️ Excluir
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

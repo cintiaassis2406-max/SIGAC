@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Cadastro de Exames
+{% endblock %}
+
+{% block conteudo %}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4">
+        🧪 Cadastro de Exames
+    </h2>
+
+
+    <!-- PESQUISA -->
+
+    <form method="GET" class="mb-4">
+
+        <div class="input-group">
+
+            <input
+                type="text"
+                name="pesquisa"
+                class="form-control"
+                placeholder="Pesquisar exame..."
+                value="{{ pesquisa }}">
+
+            <button class="btn btn-primary">
+
+                🔍 Pesquisar
+
+            </button>
+
+        </div>
+
+    </form>
+
+    <!-- CADASTRO -->
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            <strong>Novo Exame</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="POST">
+
+                <div class="row">
+
+                    <div class="col-md-5">
+
+                        <label class="form-label">
+
+                            Nome do Exame
+
+                        </label>
+
+                        <input
+                            type="text"
+                            name="nome"
+                            class="form-control"
+                            required>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+
+                            Valor Padrão
+
+                        </label>
+
+                        <input
+                            type="number"
+                            step="0.01"
+                            name="valor"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <label class="form-label">
+
+                            Situação
+
+                        </label>
+
+                        <select
+                            name="situacao"
+                            class="form-select">
+
+                            <option value="Ativo">
+
+                                Ativo
+
+                            </option>
+
+                            <option value="Inativo">
+
+                                Inativo
+
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-2 d-grid">
+
+                        <label class="form-label">
+
+                            &nbsp;
+
+                        </label>
+
+                        <button class="btn btn-success">
+
+                            💾 Salvar
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- LISTA -->
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <strong>Exames Cadastrados</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-hover table-striped align-middle">
+
+                <thead class="table-dark">
+
+                    <tr>
+
+                        <th>ID</th>
+
+                        <th>Exame</th>
+
+                        <th>Valor</th>
+
+                        <th>Situação</th>
+
+                        <th width="260">
+
+                            Ações
+
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for exame in exames %}
+
+                    <tr>
+
+                        <td>
+
+                            {{ exame.id }}
+
+                        </td>
+
+                        <td>
+
+                            {{ exame.nome }}
+
+                        </td>
+
+                        <td>
+
+                            {% if exame.valor %}
+
+                                R$ {{ "%.2f"|format(exame.valor) }}
+
+                            {% else %}
+
+                                <span class="text-secondary">
+
+                                    Não informado
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if exame.situacao == "Ativo" %}
+
+                                <span class="badge bg-success">
+
+                                    Ativo
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-danger">
+
+                                    Inativo
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            <a
+                                href="/editar_exame/{{ exame.id }}"
+                                class="btn btn-warning btn-sm">
+
+                                ✏️ Editar
+
+                            </a>
+
+                            <a
+                                href="/alterar_situacao_exame/{{ exame.id }}"
+                                class="btn btn-secondary btn-sm">
+
+                                🔄 Situação
+
+                            </a>
+
+                            <a
+                                href="/excluir_exame/{{ exame.id }}"
+                                class="btn btn-danger btn-sm"
+                                onclick="return confirm('Deseja realmente excluir este exame?')">
+
+                                🗑️ Excluir
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

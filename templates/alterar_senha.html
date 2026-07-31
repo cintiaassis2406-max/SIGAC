@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Alterar Senha
+{% endblock %}
+
+{% block conteudo %}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4">
+        🔑 Alterar Senha
+    </h2>
+
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+
+            <strong>{{ usuario.nome }}</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="POST">
+
+                <div class="row">
+
+                    <div class="col-md-6">
+
+                        <label class="form-label">
+                            Nova Senha
+                        </label>
+
+                        <input
+                            type="password"
+                            name="senha"
+                            class="form-control"
+                            required>
+
+                    </div>
+
+                    <div class="col-md-2 d-grid">
+
+                        <label class="form-label">
+                            &nbsp;
+                        </label>
+
+                        <button
+                            class="btn btn-success">
+
+                            💾 Salvar
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <a
+        href="/usuarios"
+        class="btn btn-secondary mt-3">
+
+        ← Voltar
+
+    </a>
+
+</div>
+
+{% endblock %}

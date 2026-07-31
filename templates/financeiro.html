@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block titulo %}Financeiro{% endblock %}
+
+{% block conteudo %}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4">
+        💰 Financeiro
+    </h2>
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+
+            <strong>Filtros</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="GET">
+
+                <div class="row">
+
+                    <div class="col-md-4">
+
+                        <label class="form-label">
+                            Credenciada
+                        </label>
+
+                        <select
+                            name="credenciada"
+                            class="form-select">
+
+                            <option value="">
+                                Todas
+                            </option>
+
+                            {% for c in credenciadas %}
+
+                            <option
+                                value="{{ c.id }}"
+                                {% if credenciada_id|int == c.id %}
+                                selected
+                                {% endif %}
+                            >
+
+                                {{ c.nome }}
+
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <label class="form-label">
+                            Mês
+                        </label>
+
+                        <select
+                            name="mes"
+                            class="form-select">
+
+                            <option value="">Todos</option>
+
+                            {% for i in range(1,13) %}
+
+                            <option
+                                value="{{ i }}"
+                                {% if mes|int == i %}
+                                selected
+                                {% endif %}
+                            >
+
+                                {{ "%02d"|format(i) }}
+
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <label class="form-label">
+                            Ano
+                        </label>
+
+                        <input
+                            type="number"
+                            name="ano"
+                            value="{{ ano }}"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="col-md-2 d-flex align-items-end">
+
+                        <button
+                            class="btn btn-primary w-100">
+
+                            Pesquisar
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <div class="row mb-4">
+
+        <div class="col-md-4">
+
+            <div class="card text-center">
+
+                <div class="card-body">
+
+                    <h6>Total de Atendimentos</h6>
+
+                    <h2>
+
+                        {{ total_atendimentos }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card text-center">
+
+                <div class="card-body">
+
+                    <h6>Total de Exames</h6>
+
+                    <h2>
+
+                        {{ total_exames }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card text-center">
+
+                <div class="card-body">
+
+                    <h6>Valor Total</h6>
+
+                    <h2>
+
+                        R$ {{ "%.2f"|format(total_geral) }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+
+            <strong>Resumo do Faturamento</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-striped table-hover">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Exame</th>
+
+                        <th class="text-center">
+
+                            Quantidade
+
+                        </th>
+
+                        <th class="text-end">
+
+                            Valor Unitário
+
+                        </th>
+
+                        <th class="text-end">
+
+                            Total
+
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% if resumo %}
+
+                        {% for item in resumo %}
+
+                        <tr>
+
+                            <td>
+
+                                {{ item.nome_exame }}
+
+                            </td>
+
+                            <td class="text-center">
+
+                                {{ item.quantidade }}
+
+                            </td>
+
+                            <td class="text-end">
+
+                                R$ {{ "%.2f"|format(item.valor_unitario) }}
+
+                            </td>
+
+                            <td class="text-end">
+
+                                <strong>
+
+                                R$ {{ "%.2f"|format(item.valor_total) }}
+
+                                </strong>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <tr>
+
+                            <td
+                                colspan="4"
+                                class="text-center">
+
+                                Nenhum exame encontrado.
+
+                            </td>
+
+                        </tr>
+
+                    {% endif %}
+
+                </tbody>
+
+                <tfoot>
+
+                    <tr>
+
+                        <th colspan="3">
+
+                            TOTAL GERAL
+
+                        </th>
+
+                        <th class="text-end">
+
+                            R$ {{ "%.2f"|format(total_geral) }}
+
+                        </th>
+
+                    </tr>
+
+                </tfoot>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <div class="mt-4">
+
+<a
+    href="/gerar_pdf?credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}"
+    class="btn btn-success">
+
+    📄 Gerar PDF
+
+</a>
+
+<a
+    href="/gerar_excel?credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}"
+    class="btn btn-primary">
+
+    📊 Exportar Excel
+
+</a>
+
+<div class="card mt-4">
+
+    <div class="card-header">
+
+        <strong>Status do Faturamento</strong>
+
+    </div>
+
+<a
+    href="/alterar_status_faturamento?credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}&status=Enviado para Conferência da Credenciada"
+    class="btn btn-primary">
+
+    📤 Enviar para Conferência da Credenciada
+
+</a>
+
+            📤 Enviar para Conferência da Credenciada
+
+        </button>
+
+<a
+    href="/alterar_status_faturamento?credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}&status=Faturamento Fechado"
+    class="btn btn-success">
+
+    ⚫ Fechar Faturamento
+
+</a>
+
+            ⚫ Fechar Faturamento
+
+        </button>
+
+    </div>
+
+</div>
+
+    </div>
+
+</div>
+
+{% endblock %}

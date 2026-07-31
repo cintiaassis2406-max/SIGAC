@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block titulo %}Editar Empresa{% endblock %}
+
+{% block conteudo %}
+
+<div class="container mt-4">
+
+    <h2>Editar Empresa</h2>
+
+    <form method="POST">
+
+        <div class="mb-3">
+            <label class="form-label">Credenciada</label>
+
+            <select name="credenciada_id" class="form-control" required>
+
+                {% for c in credenciadas %}
+
+                <option value="{{ c.id }}"
+                {% if c.id == empresa.credenciada_id %}
+                    selected
+                {% endif %}
+                >
+                    {{ c.nome }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Empresa</label>
+
+            <input
+                type="text"
+                name="nome"
+                class="form-control"
+                value="{{ empresa.nome }}"
+                required>
+        </div>
+
+        <button class="btn btn-success">
+            Salvar Alterações
+        </button>
+
+        <a href="/empresas" class="btn btn-secondary">
+            Cancelar
+        </a>
+
+    </form>
+
+</div>
+
+{% endblock %}

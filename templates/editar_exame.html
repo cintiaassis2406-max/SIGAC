@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Editar Exame</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <div class="card shadow">
+
+        <div class="card-header bg-warning">
+
+            <h4 class="mb-0">
+                ✏️ Editar Exame
+            </h4>
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="POST">
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Nome do Exame
+
+                    </label>
+
+                    <input
+                        type="text"
+                        name="nome"
+                        class="form-control"
+                        value="{{ exame.nome }}"
+                        required>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Valor Padrão
+
+                    </label>
+
+                    <input
+                        type="number"
+                        step="0.01"
+                        name="valor"
+                        class="form-control"
+                        value="{{ exame.valor }}">
+
+                </div>
+
+                <div class="mb-4">
+
+                    <label class="form-label">
+
+                        Situação
+
+                    </label>
+
+                    <select
+                        name="situacao"
+                        class="form-select">
+
+                        <option
+                            value="Ativo"
+                            {% if exame.situacao == "Ativo" %}selected{% endif %}>
+
+                            Ativo
+
+                        </option>
+
+                        <option
+                            value="Inativo"
+                            {% if exame.situacao == "Inativo" %}selected{% endif %}>
+
+                            Inativo
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <button
+                    class="btn btn-success">
+
+                    💾 Salvar Alterações
+
+                </button>
+
+                <a
+                    href="/exames"
+                    class="btn btn-secondary">
+
+                    ← Voltar
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

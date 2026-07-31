@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block conteudo %}
+
+<div class="row">
+
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Atendimentos Hoje</h6>
+  <h2>{{ total_atendimentos }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Credenciadas</h6>
+<h2>{{ total_credenciadas }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Empresas</h6>
+<h2>{{ total_empresas }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Pendências</h6>
+<h2>{{ total_exames }}</h2>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="card shadow-sm mb-4">
+
+    <div class="card-header">
+        🔍 Pesquisa Rápida
+    </div>
+
+    <div class="card-body">
+
+        <input
+            class="form-control"
+            type="text"
+            placeholder="Pesquisar por colaborador, empresa, credenciada ou data">
+
+    </div>
+
+</div>
+
+<div class="card shadow-sm">
+
+    <div class="card-header">
+        📋 Últimos Atendimentos
+    </div>
+
+    <div class="card-body">
+
+        <table class="table table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>Data</th>
+                    <th>Credenciada</th>
+                    <th>Empresa</th>
+                    <th>Colaborador</th>
+                    <th>Tipo</th>
+
+                </tr>
+
+            </thead>
+
+<tbody>
+
+{% if ultimos_atendimentos %}
+
+    {% for atendimento in ultimos_atendimentos %}
+
+    <tr>
+
+        <td>{{ atendimento.data_atendimento }}</td>
+        <td>{{ atendimento.credenciada }}</td>
+        <td>{{ atendimento.empresa }}</td>
+        <td>{{ atendimento.colaborador }}</td>
+        <td>{{ atendimento.tipo_atendimento }}</td>
+
+    </tr>
+
+    {% endfor %}
+
+{% else %}
+
+    <tr>
+
+        <td colspan="5" class="text-center">
+            Nenhum atendimento cadastrado.
+        </td>
+
+    </tr>
+
+{% endif %}
+
+</tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

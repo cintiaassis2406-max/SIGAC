@@ -1,0 +1,801 @@
+{% extends "base.html" %}
+
+{% block conteudo %}
+
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">
+
+        Novo Atendimento
+
+    </h2>
+
+    <div class="card shadow">
+
+        <div class="card-body">
+
+            <form method="POST">
+
+                <div class="row">
+
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+
+                            Data do Atendimento
+
+                        </label>
+
+                        <input
+                            type="date"
+                            class="form-control"
+                            name="data_atendimento"
+                            value="{{ data_hoje }}"
+                            required>
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <label class="form-label">
+
+                            Credenciada
+
+                        </label>
+
+                        <div class="input-group">
+
+                            <select
+                                class="form-select"
+                                id="credenciada"
+                                name="credenciada"
+                                required>
+
+                                <option value="">
+
+                                    Selecione
+
+                                </option>
+
+                                {% for c in credenciadas %}
+
+                                <option value="{{ c.id }}">
+
+                                    {{ c.nome }}
+
+                                </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                            <button
+                                type="button"
+                                class="btn btn-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalCredenciada">
+
+                                +
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-5">
+
+                        <label class="form-label">
+
+                            Empresa
+
+                        </label>
+
+                        <div class="input-group">
+
+                            <select
+                                class="form-select"
+                                id="empresa"
+                                name="empresa"
+                                required>
+
+                                <option value="">
+
+                                    Selecione a Credenciada
+
+                                </option>
+
+                                {% for e in empresas %}
+
+                                <option
+                                    value="{{ e.id }}"
+                                    data-credenciada="{{ e.credenciada_id }}">
+
+                                    {{ e.nome }}
+
+                                </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                            <button
+                                type="button"
+                                class="btn btn-success"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalEmpresa">
+
+                                +
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+                                <br>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Nome do Colaborador
+
+                    </label>
+
+                    <input
+                        type="text"
+                        name="colaborador"
+                        class="form-control"
+                        required>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Tipo de Atendimento
+
+                    </label>
+
+                    <select
+                        name="tipo_atendimento"
+                        class="form-select"
+                        required>
+
+                        <option>Admissional</option>
+                        <option>Periódico</option>
+                        <option>Demissional</option>
+                        <option>Retorno ao Trabalho</option>
+                        <option>Mudança de Função</option>
+                        <option>Mudança de Risco</option>
+                        <option>Outros</option>
+
+                    </select>
+
+                </div>
+
+                <hr>
+
+                <h5>Exames</h5>
+
+                <div class="row" id="listaExames">
+
+                    {% for exame in exames %}
+
+                    <div class="col-md-6">
+
+                        <div class="form-check">
+
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                name="exames"
+                                value="{{ exame.id }}"
+                                id="exame{{ exame.id }}">
+
+                            <label
+                                class="form-check-label"
+                                for="exame{{ exame.id }}">
+
+                                {{ exame.nome }}
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+                <br>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Observações
+
+                    </label>
+
+                    <textarea
+                        name="observacoes"
+                        class="form-control"
+                        rows="4"></textarea>
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-success">
+
+                    Salvar Atendimento
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <hr class="mt-5">
+
+<h3 class="mb-3">
+    Atendimentos Cadastrados
+</h3>
+
+<form method="GET" class="row mb-3">
+
+    <div class="col-md-10">
+
+        <input
+            type="text"
+            name="pesquisa"
+            class="form-control"
+            placeholder="Pesquisar por colaborador, empresa ou credenciada..."
+            value="{{ pesquisa }}">
+
+    </div>
+
+    <div class="col-md-2 d-grid">
+
+        <button
+            type="submit"
+            class="btn btn-primary">
+
+            🔎 Pesquisar
+
+        </button>
+
+    </div>
+
+</form>
+
+    <div class="table-responsive">
+
+        <table class="table table-striped table-bordered align-middle">
+
+            <thead class="table-primary">
+
+                <tr>
+
+                    <th>Data</th>
+                    <th>Credenciada</th>
+                    <th>Empresa</th>
+                    <th>Colaborador</th>
+                    <th>Tipo</th>
+                    <th width="140">Ações</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% if atendimentos %}
+
+                    {% for a in atendimentos %}
+
+                    <tr>
+
+                        <td>{{ a.data_atendimento }}</td>
+                        <td>{{ a.credenciada }}</td>
+                        <td>{{ a.empresa }}</td>
+                        <td>{{ a.colaborador }}</td>
+                        <td>{{ a.tipo_atendimento }}</td>
+
+  <td>
+
+    <a
+        href="/editar_atendimento/{{ a.id }}"
+        class="btn btn-warning btn-sm">
+
+        ✏️ Editar
+
+    </a>
+
+    <a
+        href="/excluir_atendimento/{{ a.id }}"
+        class="btn btn-danger btn-sm"
+        onclick="return confirm('Deseja excluir este atendimento?')">
+
+        🗑️ Excluir
+
+    </a>
+
+</td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr>
+
+                        <td colspan="6" class="text-center">
+
+                            Nenhum atendimento cadastrado.
+
+                        </td>
+
+                    </tr>
+
+                {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+    <!-- Modal Nova Credenciada -->
+
+<div class="modal fade" id="modalCredenciada" tabindex="-1">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+
+                    Nova Credenciada
+
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="formCredenciada">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Nome
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            name="nome"
+                            required>
+
+                    </div>
+<button
+    type="button"
+    class="btn btn-outline-primary mb-3"
+    data-bs-toggle="modal"
+    data-bs-target="#modalExame">
+
+    + Novo Exame
+
+</button>
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Tipo de Cobrança
+
+                        </label>
+
+                        <select
+                            class="form-select"
+                            name="tipo_cobranca">
+
+                            <option value="Por Atendimento">Por Atendimento</option>
+
+                            <option value="Por Exame">Por Exame</option>
+
+                        </select>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+
+                    Cancelar
+
+                </button>
+
+                <button
+                    id="salvarCredenciada"
+                    class="btn btn-primary">
+
+                    Salvar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Modal Nova Empresa -->
+
+<!-- Modal Nova Empresa -->
+
+<div class="modal fade" id="modalEmpresa" tabindex="-1">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+
+                    Nova Empresa
+
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="formEmpresa">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Nome da Empresa
+
+                        </label>
+
+                        <input
+                            type="text"
+                            name="nome"
+                            class="form-control"
+                            required>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+
+                    Cancelar
+
+                </button>
+
+                <button
+                    id="salvarEmpresa"
+                    class="btn btn-success">
+
+                    Salvar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- Modal Novo Exame -->
+
+<div class="modal fade" id="modalExame" tabindex="-1">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+
+                    Novo Exame
+
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="formExame">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Nome do Exame
+
+                        </label>
+
+                        <input
+                            type="text"
+                            name="nome"
+                            class="form-control"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Valor (R$)
+
+                        </label>
+
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value="0.00"
+                            name="valor"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Situação
+
+                        </label>
+
+                        <select
+                            name="situacao"
+                            class="form-select">
+
+                            <option value="Ativo">Ativo</option>
+                            <option value="Inativo">Inativo</option>
+
+                        </select>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+
+                    Cancelar
+
+                </button>
+
+                <button
+                    type="button"
+                    id="salvarExame"
+                    class="btn btn-primary">
+
+                    Salvar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+const credenciada = document.getElementById("credenciada");
+const empresa = document.getElementById("empresa");
+
+// Filtrar empresas conforme a credenciada
+credenciada.addEventListener("change", function () {
+
+    let id = this.value;
+
+    for (let option of empresa.options) {
+
+        if (option.value == "") {
+            option.hidden = false;
+            continue;
+        }
+
+        option.hidden = option.dataset.credenciada != id;
+    }
+
+    empresa.value = "";
+
+});
+
+// Salvar nova credenciada
+document.getElementById("salvarCredenciada").addEventListener("click", function () {
+
+    const formulario = document.getElementById("formCredenciada");
+
+    const dados = new FormData(formulario);
+
+    fetch("/nova_credenciada", {
+        method: "POST",
+        body: dados
+    })
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        let option = document.createElement("option");
+
+        option.value = data.id;
+        option.text = data.nome;
+
+        credenciada.appendChild(option);
+
+        credenciada.value = data.id;
+
+        bootstrap.Modal.getInstance(
+            document.getElementById("modalCredenciada")
+        ).hide();
+
+        formulario.reset();
+
+        credenciada.dispatchEvent(new Event("change"));
+
+    });
+
+});
+document.getElementById("salvarEmpresa").addEventListener("click", function () {
+
+    const formulario = document.getElementById("formEmpresa");
+
+    const dados = new FormData(formulario);
+
+    // Envia também a credenciada selecionada
+    dados.append("credenciada_id", credenciada.value);
+
+    fetch("/nova_empresa", {
+        method: "POST",
+        body: dados
+    })
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        let option = document.createElement("option");
+
+        option.value = data.id;
+        option.text = data.nome;
+        option.dataset.credenciada = data.credenciada_id;
+
+        empresa.appendChild(option);
+
+        empresa.value = data.id;
+
+        bootstrap.Modal.getInstance(
+            document.getElementById("modalEmpresa")
+        ).hide();
+
+        formulario.reset();
+
+    });
+
+});
+document.getElementById("salvarExame").addEventListener("click", function () {
+
+    const formulario = document.getElementById("formExame");
+
+    const dados = new FormData(formulario);
+
+    fetch("/novo_exame", {
+        method: "POST",
+        body: dados
+    })
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        const lista = document.getElementById("listaExames");
+
+        const div = document.createElement("div");
+
+        div.className = "col-md-6";
+
+        div.innerHTML = `
+            <div class="form-check">
+
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="exames"
+                    value="${data.id}"
+                    id="exame${data.id}"
+                    checked>
+
+                <label
+                    class="form-check-label"
+                    for="exame${data.id}">
+
+                    ${data.nome}
+
+                </label>
+
+            </div>
+        `;
+
+        lista.appendChild(div);
+
+        bootstrap.Modal
+            .getInstance(document.getElementById("modalExame"))
+            .hide();
+
+        formulario.reset();
+
+    });
+
+});
+</script>
+
+{% endblock %}

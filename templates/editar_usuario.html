@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Editar Usuário
+{% endblock %}
+
+{% block conteudo %}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4">
+        ✏️ Editar Usuário
+    </h2>
+
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+
+            <strong>Dados do Usuário</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="POST">
+
+                <div class="row">
+
+                    <div class="col-md-4">
+
+                        <label class="form-label">
+                            Nome
+                        </label>
+
+                        <input
+                            type="text"
+                            name="nome"
+                            class="form-control"
+                            value="{{ usuario.nome }}"
+                            required>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+                            Usuário
+                        </label>
+
+                        <input
+                            type="text"
+                            name="usuario"
+                            class="form-control"
+                            value="{{ usuario.usuario }}"
+                            required>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+                            Perfil
+                        </label>
+
+                        <select
+                            name="perfil"
+                            class="form-select">
+
+                            <option
+                                value="Administrador"
+                                {% if usuario.perfil=="Administrador" %}selected{% endif %}>
+                                Administrador
+                            </option>
+
+                            <option
+                                value="Recepção"
+                                {% if usuario.perfil=="Recepção" %}selected{% endif %}>
+                                Recepção
+                            </option>
+
+                            <option
+                                value="Financeiro"
+                                {% if usuario.perfil=="Financeiro" %}selected{% endif %}>
+                                Financeiro
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-2 d-grid">
+
+                        <label class="form-label">
+                            &nbsp;
+                        </label>
+
+                        <button class="btn btn-success">
+
+                            💾 Salvar
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <a
+        href="/usuarios"
+        class="btn btn-secondary mt-3">
+
+        ← Voltar
+
+    </a>
+
+</div>
+
+{% endblock %}

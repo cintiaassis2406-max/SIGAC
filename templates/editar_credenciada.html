@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block conteudo %}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Editar Credenciada</h2>
+
+    <form method="POST">
+
+        <div class="mb-3">
+            <label class="form-label">Nome</label>
+            <input
+                type="text"
+                class="form-control"
+                name="nome"
+                value="{{ credenciada.nome }}"
+                required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Tipo de Cobrança</label>
+            <input
+                type="text"
+                class="form-control"
+                name="tipo"
+                value="{{ credenciada.tipo_cobranca }}">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">E-mail</label>
+<input
+    type="email"
+    name="email"
+    class="form-control"
+    value="{{ credenciada.email or '' }}">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Telefone</label>
+            <input
+                type="text"
+                class="form-control"
+                name="telefone"
+value="{{ credenciada.telefone or '' }}">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Contato</label>
+            <input
+                type="text"
+                class="form-control"
+                name="contato"
+                value="{{ credenciada.contato or '' }}">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Situação Financeira</label>
+            <select
+                class="form-select"
+                name="situacao_financeira">
+
+                <option value="">Selecione</option>
+
+                <option value="Adimplente"
+                {% if credenciada.situacao_financeira=="Adimplente" %}selected{% endif %}>
+                Adimplente
+                </option>
+
+                <option value="Pagamento em atraso"
+                {% if credenciada.situacao_financeira=="Pagamento em atraso" %}selected{% endif %}>
+                Pagamento em atraso
+                </option>
+
+                <option value="Bloqueada"
+                {% if credenciada.situacao_financeira=="Bloqueada" %}selected{% endif %}>
+                Bloqueada
+                </option>
+
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Observações</label>
+            <textarea
+                class="form-control"
+                name="observacoes"
+                rows="3">{{ credenciada.observacoes or '' }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Observações Internas</label>
+            <textarea
+                class="form-control"
+                name="observacoes_internas"
+                rows="3">{{ credenciada.observacoes_internas or '' }}</textarea>
+        </div>
+
+        <button
+            type="submit"
+            class="btn btn-success">
+            Salvar Alterações
+        </button>
+
+        <a
+            href="/credenciadas"
+            class="btn btn-secondary">
+            Cancelar
+        </a>
+
+    </form>
+
+</div>
+
+{% endblock %}

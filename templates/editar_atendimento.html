@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block conteudo %}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Editar Atendimento</h2>
+
+    <form method="POST">
+
+        <div class="row">
+
+            <div class="col-md-3">
+                <label class="form-label">Data</label>
+                <input
+                    type="date"
+                    class="form-control"
+                    name="data_atendimento"
+                    value="{{ atendimento.data_atendimento }}">
+            </div>
+
+            <div class="col-md-5">
+                <label class="form-label">Colaborador</label>
+                <input
+                    type="text"
+                    class="form-control"
+                    name="colaborador"
+                    value="{{ atendimento.colaborador }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Tipo de Atendimento</label>
+                <input
+                    type="text"
+                    class="form-control"
+                    name="tipo_atendimento"
+                    value="{{ atendimento.tipo_atendimento }}">
+            </div>
+
+        </div>
+
+        <br>
+
+<div class="row">
+
+    <div class="col-md-6">
+        <label class="form-label">Credenciada</label>
+
+        <select
+            class="form-select"
+            name="credenciada">
+
+            {% for c in credenciadas %}
+            <option
+                value="{{ c.id }}"
+                {% if c.id == atendimento.credenciada_id %}selected{% endif %}>
+                {{ c.nome }}
+            </option>
+            {% endfor %}
+
+        </select>
+
+    </div>
+
+    <div class="col-md-6">
+
+<label class="form-label">Empresa</label>
+
+        <select
+            class="form-select"
+            name="empresa">
+
+            {% for e in empresas %}
+            <option
+                value="{{ e.id }}"
+                {% if e.id == atendimento.empresa_id %}selected{% endif %}>
+                {{ e.nome }}
+            </option>
+            {% endfor %}
+
+        </select>
+
+    </div>
+
+</div>
+
+        <br>
+
+        <button
+            type="submit"
+            class="btn btn-success">
+            Salvar Alterações
+        </button>
+
+        <a
+            href="/atendimentos"
+            class="btn btn-secondary">
+            Cancelar
+        </a>
+
+    </form>
+
+</div>
+
+{% endblock %}
