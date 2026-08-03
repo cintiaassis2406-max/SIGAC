@@ -5,186 +5,9 @@ from datetime import date
 
 def registrar_rotas(app):
 
-    @app.route("/atendimentos", methods=["GET", "POST"])
-    def atendimentos():
-
-        conexao = conectar()
-        cursor = conexao.cursor()
-
-        if request.method == "POST":
-
-            data_atendimento = request.form["data_atendimento"]
-            credenciada_id = request.form["credenciada"]
-            empresa_id = request.form["empresa"]
-            colaborador = request.form["colaborador"]
-            tipo_atendimento = request.form["tipo_atendimento"]
-            observacoes = request.form.get("observacoes", "")
-            exames = request.form.getlist("exames")
-
-            cursor.execute("""
-                INSERT INTO atendimentos
-                (
-                    data_atendimento,
-                    credenciada_id,
-                    empresa_id,
-                    colaborador,
-                    tipo_atendimento,
-                    observacoes
-                )
-                VALUES (?,?,?,?,?,?)
-            """, (
-                data_atendimento,
-                credenciada_id,
-                empresa_id,
-                colaborador,
-                tipo_atendimento,
-                observacoes
-            ))
-
-            atendimento_id = cursor.lastrowid
-
-            for exame_id in exames:
-
-                cursor.execute("""
-                    SELECT
-                        e.nome,
-                        COALESCE(pc.valor, e.valor) AS valor
-                    FROM exames e
-
-                    LEFT JOIN precos_credenciada pc
-                        ON pc.exame_id = e.id
-                       AND pc.credenciada_id = ?
-
-                    WHERE e.id = ?
-                """, (
-                    credenciada_id,
-                    exame_id
-                ))
-
-                exame = cursor.fetchone()
-
-                if exame:
-
-                    cursor.execute("""
-                        INSERT INTO atendimento_exames
-                        (
-                            atendimento_id,
-                            exame_id,
-                            nome_exame,
-                            valor_exame
-                        )
-                        VALUES (?, ?, ?, ?)
-                    """, (
-                        atendimento_id,
-                        exame_id,
-                        exame["nome"],
-                        exame["valor"]
-                    ))
-
-            conexao.commit()
-            conexao.close()
-
-            return redirect("/atendimentos")
-
-        cursor.execute("SELECT * FROM credenciadas ORDER BY nome")
-        credenciadas = cursor.fetchall()
-
-        cursor.execute("SELECT * FROM empresas ORDER BY nome")
-        empresas = cursor.fetchall()
-
-        cursor.execute("""
-            SELECT *
-            FROM exames
-            WHERE situacao='Ativo'
-            ORDER BY nome
-        """)
-
-        exames = cursor.fetchall()
-
-        # ==========================
-        # PESQUISA DE ATENDIMENTOS
-        # ==========================
-
-        pesquisa = request.args.get("pesquisa", "")
-
-        sql = """
-            SELECT
-                a.id,
-                a.data_atendimento,
-                c.nome AS credenciada,
-                e.nome AS empresa,
-                a.colaborador,
-                a.tipo_atendimento
-            FROM atendimentos a
-            JOIN credenciadas c
-                ON c.id = a.credenciada_id
-            JOIN empresas e
-                ON e.id = a.empresa_id
-        """
-
-        parametros = []
-
-        if pesquisa:
-
-            sql += """
-                WHERE
-                    a.colaborador LIKE ?
-                    OR e.nome LIKE ?
-                    OR c.nome LIKE ?
-            """
-
-            termo = f"%{pesquisa}%"
-
-            parametros.extend([
-                termo,
-                termo,
-                termo
-            ])
-
-        sql += """
-            ORDER BY
-                a.data_atendimento DESC,
-                a.id DESC
-        """
-
-        cursor.execute(sql, parametros)
-
-        lista_atendimentos = cursor.fetchall()
-
-        conexao.close()
-
-        return render_template(
-            "atendimentos.html",
-            data_hoje=date.today().strftime("%Y-%m-%d"),
-            credenciadas=credenciadas,
-            empresas=empresas,
-            exames=exames,
-            atendimentos=lista_atendimentos,
-            pesquisa=pesquisa
-        )
-
-
-    @app.route("/excluir_atendimento/<int:id>")
-    def excluir_atendimento(id):
-
-        conexao = conectar()
-        cursor = conexao.cursor()
-
-        cursor.execute(
-            "DELETE FROM atendimento_exames WHERE atendimento_id=?",
-            (id,)
-        )
-
-        cursor.execute(
-            "DELETE FROM atendimentos WHERE id=?",
-            (id,)
-        )
-
-        conexao.commit()
-        conexao.close()
-
-        return redirect("/atendimentos")
-
+    # ==================================================
+    # NOVA CREDENCIADA (AJAX)
+    # ==================================================
 
     @app.route("/nova_credenciada", methods=["POST"])
     def nova_credenciada():
@@ -193,12 +16,18 @@ def registrar_rotas(app):
         cursor = conexao.cursor()
 
         nome = request.form["nome"].strip()
-        tipo = request.form["tipo_cobranca"]
 
-        cursor.execute(
-            "INSERT INTO credenciadas (nome, tipo_cobranca) VALUES (?, ?)",
-            (nome, tipo)
-        )
+        cursor.execute("""
+            INSERT INTO credenciadas
+            (
+                nome,
+                tipo_cobranca
+            )
+            VALUES (?, ?)
+        """, (
+            nome,
+            "Exames"
+        ))
 
         conexao.commit()
 
@@ -210,7 +39,12 @@ def registrar_rotas(app):
             "id": novo_id,
             "nome": nome
         })
-    
+
+
+    # ==================================================
+    # NOVA EMPRESA (AJAX)
+    # ==================================================
+
     @app.route("/nova_empresa", methods=["POST"])
     def nova_empresa():
 
@@ -226,7 +60,7 @@ def registrar_rotas(app):
                 credenciada_id,
                 nome
             )
-            VALUES (?,?)
+            VALUES (?, ?)
         """, (
             credenciada_id,
             nome
@@ -245,6 +79,10 @@ def registrar_rotas(app):
         })
 
 
+    # ==================================================
+    # NOVO EXAME (AJAX)
+    # ==================================================
+
     @app.route("/novo_exame", methods=["POST"])
     def novo_exame():
 
@@ -252,20 +90,20 @@ def registrar_rotas(app):
         cursor = conexao.cursor()
 
         nome = request.form["nome"].strip()
-        valor = request.form["valor"]
-        situacao = request.form["situacao"]
+        situacao = request.form.get(
+            "situacao",
+            "Ativo"
+        )
 
         cursor.execute("""
             INSERT INTO exames
             (
                 nome,
-                valor,
                 situacao
             )
-            VALUES (?,?,?)
+            VALUES (?, ?)
         """, (
             nome,
-            valor,
             situacao
         ))
 
@@ -281,79 +119,613 @@ def registrar_rotas(app):
         })
 
 
-    @app.route("/editar_atendimento/<int:id>", methods=["GET", "POST"])
-    def editar_atendimento(id):
+    # ==================================================
+    # LISTAR / CADASTRAR ATENDIMENTOS
+    # ==================================================
+
+    @app.route("/atendimentos", methods=["GET", "POST"])
+    def atendimentos():
 
         conexao = conectar()
         cursor = conexao.cursor()
 
+
         if request.method == "POST":
 
             data_atendimento = request.form["data_atendimento"]
-            credenciada_id = request.form["credenciada"]
-            empresa_id = request.form["empresa"]
-            colaborador = request.form["colaborador"]
+
+            credenciada_id = request.form["credenciada_id"]
+
+            empresa_id = request.form["empresa_id"]
+
+            colaborador = request.form["colaborador"].strip()
+
             tipo_atendimento = request.form["tipo_atendimento"]
 
+            situacao_financeira = request.form[
+                "situacao_financeira"
+            ]
+
+            observacoes = request.form.get(
+                "observacoes",
+                ""
+            )
+
+
             cursor.execute("""
-                UPDATE atendimentos
-                SET
-                    data_atendimento = ?,
-                    credenciada_id = ?,
-                    empresa_id = ?,
-                    colaborador = ?,
-                    tipo_atendimento = ?
-                WHERE id = ?
+                INSERT INTO atendimentos
+                (
+                    data_atendimento,
+                    credenciada_id,
+                    empresa_id,
+                    colaborador,
+                    tipo_atendimento,
+                    situacao_financeira,
+                    observacoes
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
                 data_atendimento,
                 credenciada_id,
                 empresa_id,
                 colaborador,
                 tipo_atendimento,
-                id
+                situacao_financeira,
+                observacoes
             ))
 
+
+            atendimento_id = cursor.lastrowid
+
+
+            exames = request.form.getlist(
+                "exames"
+            )
+
+
+            for exame_id in exames:
+
+                cursor.execute("""
+                    SELECT nome
+                    FROM exames
+                    WHERE id = ?
+                """, (
+                    exame_id,
+                ))
+
+                exame = cursor.fetchone()
+
+
+                cursor.execute("""
+                    SELECT valor
+                    FROM precos_credenciada
+                    WHERE credenciada_id = ?
+                    AND exame_id = ?
+                """, (
+                    credenciada_id,
+                    exame_id
+                ))
+
+                preco = cursor.fetchone()
+
+                valor = 0
+
+                if preco:
+                    valor = preco["valor"]
+
+
+                cursor.execute("""
+                    INSERT INTO atendimento_exames
+                    (
+                        atendimento_id,
+                        exame_id,
+                        nome_exame,
+                        valor_exame
+                    )
+                    VALUES (?, ?, ?, ?)
+                """, (
+                    atendimento_id,
+                    exame_id,
+                    exame["nome"],
+                    valor
+                ))
+
+
             conexao.commit()
+
             conexao.close()
 
             return redirect("/atendimentos")
-        
+
+        # ==================================================
+        # FILTROS / LISTAGEM
+        # ==================================================
+
+        pesquisa = request.args.get(
+            "pesquisa",
+            ""
+        )
+
+        if pesquisa:
+
+            cursor.execute("""
+                SELECT
+                    a.id,
+                    a.data_atendimento,
+                    c.nome AS credenciada,
+                    e.nome AS empresa,
+                    a.colaborador,
+                    a.tipo_atendimento,
+                    a.situacao_financeira
+
+                FROM atendimentos a
+
+                INNER JOIN credenciadas c
+                    ON c.id = a.credenciada_id
+
+                INNER JOIN empresas e
+                    ON e.id = a.empresa_id
+
+                WHERE a.colaborador LIKE ?
+
+                ORDER BY a.colaborador
+            """, (
+                f"%{pesquisa}%",
+            ))
+
+        else:
+
+            cursor.execute("""
+                SELECT
+                    a.id,
+                    a.data_atendimento,
+                    c.nome AS credenciada,
+                    e.nome AS empresa,
+                    a.colaborador,
+                    a.tipo_atendimento,
+                    a.situacao_financeira
+
+                FROM atendimentos a
+
+                INNER JOIN credenciadas c
+                    ON c.id = a.credenciada_id
+
+                INNER JOIN empresas e
+                    ON e.id = a.empresa_id
+
+                ORDER BY
+                    a.colaborador
+            """)
+
+
+        lista = cursor.fetchall()
+
+
+        # ==================================================
+        # DADOS PARA CADASTRO
+        # ==================================================
+
         cursor.execute("""
             SELECT
-                a.*,
-                c.nome AS credenciada,
-                e.nome AS empresa
-            FROM atendimentos a
-            JOIN credenciadas c
-                ON c.id = a.credenciada_id
-            JOIN empresas e
-                ON e.id = a.empresa_id
-            WHERE a.id = ?
-        """, (id,))
+                id,
+                nome
 
-        atendimento = cursor.fetchone()
-
-        cursor.execute("""
-            SELECT *
             FROM credenciadas
+
             ORDER BY nome
         """)
 
         credenciadas = cursor.fetchall()
 
+
+
         cursor.execute("""
-            SELECT *
-            FROM empresas
+            SELECT
+                id,
+                nome
+
+            FROM exames
+
+            WHERE situacao = 'Ativo'
+
             ORDER BY nome
         """)
 
-        empresas = cursor.fetchall()
+        exames = cursor.fetchall()
+
+
 
         conexao.close()
+
+
+        return render_template(
+            "atendimentos.html",
+            atendimentos=lista,
+            credenciadas=credenciadas,
+            exames=exames,
+            pesquisa=pesquisa,
+            hoje=date.today()
+        )
+
+
+
+    # ==================================================
+    # BUSCAR EMPRESAS DA CREDENCIADA (AJAX)
+    # ==================================================
+
+    @app.route(
+        "/buscar_empresas/<int:credenciada_id>"
+    )
+    def buscar_empresas(credenciada_id):
+
+        conexao = conectar()
+        cursor = conexao.cursor()
+
+
+        cursor.execute("""
+            SELECT
+                id,
+                nome
+
+            FROM empresas
+
+            WHERE credenciada_id = ?
+
+            ORDER BY nome
+        """, (
+            credenciada_id,
+        ))
+
+
+        empresas = cursor.fetchall()
+
+
+        conexao.close()
+
+
+        return jsonify([
+            {
+                "id": empresa["id"],
+                "nome": empresa["nome"]
+            }
+
+            for empresa in empresas
+        ])
+    # ==================================================
+    # EDITAR ATENDIMENTO
+    # ==================================================
+
+    @app.route(
+        "/editar_atendimento/<int:id>",
+        methods=["GET", "POST"]
+    )
+    def editar_atendimento(id):
+
+        conexao = conectar()
+        cursor = conexao.cursor()
+
+
+        if request.method == "POST":
+
+            data_atendimento = request.form["data_atendimento"]
+
+            credenciada_id = request.form["credenciada_id"]
+
+            empresa_id = request.form["empresa_id"]
+
+            colaborador = request.form["colaborador"]
+
+            tipo_atendimento = request.form["tipo_atendimento"]
+
+            situacao_financeira = request.form[
+                "situacao_financeira"
+            ]
+
+            observacoes = request.form.get(
+                "observacoes",
+                ""
+            )
+
+
+            cursor.execute("""
+                UPDATE atendimentos
+
+                SET
+                    data_atendimento = ?,
+                    credenciada_id = ?,
+                    empresa_id = ?,
+                    colaborador = ?,
+                    tipo_atendimento = ?,
+                    situacao_financeira = ?,
+                    observacoes = ?
+
+                WHERE id = ?
+
+            """, (
+                data_atendimento,
+                credenciada_id,
+                empresa_id,
+                colaborador,
+                tipo_atendimento,
+                situacao_financeira,
+                observacoes,
+                id
+            ))
+
+
+            # Remove exames antigos
+
+            cursor.execute("""
+                DELETE FROM atendimento_exames
+
+                WHERE atendimento_id = ?
+
+            """, (
+                id,
+            ))
+
+
+            exames = request.form.getlist(
+                "exames"
+            )
+
+
+            for exame_id in exames:
+
+                cursor.execute("""
+                    SELECT nome
+                    FROM exames
+                    WHERE id = ?
+                """, (
+                    exame_id,
+                ))
+
+                exame = cursor.fetchone()
+
+
+                cursor.execute("""
+                    SELECT valor
+                    FROM precos_credenciada
+
+                    WHERE credenciada_id = ?
+                    AND exame_id = ?
+
+                """, (
+                    credenciada_id,
+                    exame_id
+                ))
+
+
+                preco = cursor.fetchone()
+
+
+                valor = 0
+
+                if preco:
+
+                    valor = preco["valor"]
+
+
+
+                cursor.execute("""
+                    INSERT INTO atendimento_exames
+
+                    (
+                        atendimento_id,
+                        exame_id,
+                        nome_exame,
+                        valor_exame
+                    )
+
+                    VALUES (?, ?, ?, ?)
+
+                """, (
+                    id,
+                    exame_id,
+                    exame["nome"],
+                    valor
+                ))
+
+
+
+            conexao.commit()
+
+            conexao.close()
+
+
+            return redirect(
+                "/atendimentos"
+            )
+
+
+
+        # Buscar atendimento
+
+        cursor.execute("""
+            SELECT *
+
+            FROM atendimentos
+
+            WHERE id = ?
+
+        """, (
+            id,
+        ))
+
+
+        atendimento = cursor.fetchone()
+
+
+
+        # Buscar exames selecionados
+
+        cursor.execute("""
+            SELECT exame_id
+
+            FROM atendimento_exames
+
+            WHERE atendimento_id = ?
+
+        """, (
+            id,
+        ))
+
+
+        exames_selecionados = [
+            item["exame_id"]
+            for item in cursor.fetchall()
+        ]
+
+
+
+        cursor.execute("""
+            SELECT
+                id,
+                nome
+
+            FROM credenciadas
+
+            ORDER BY nome
+
+        """)
+
+        credenciadas = cursor.fetchall()
+
+
+
+        cursor.execute("""
+            SELECT
+                id,
+                nome
+
+            FROM exames
+
+            ORDER BY nome
+
+        """)
+
+        exames = cursor.fetchall()
+
+
+
+        cursor.execute("""
+            SELECT
+                id,
+                nome
+
+            FROM empresas
+
+            WHERE credenciada_id = ?
+
+            ORDER BY nome
+
+        """, (
+            atendimento["credenciada_id"],
+        ))
+
+        empresas = cursor.fetchall()
+
+
+
+        conexao.close()
+
+
 
         return render_template(
             "editar_atendimento.html",
             atendimento=atendimento,
             credenciadas=credenciadas,
-            empresas=empresas
+            empresas=empresas,
+            exames=exames,
+            exames_selecionados=exames_selecionados
+        )
+    # ==================================================
+    # VISUALIZAR EXAMES DO ATENDIMENTO
+    # ==================================================
+
+    @app.route(
+        "/exames_atendimento/<int:id>"
+    )
+    def exames_atendimento(id):
+
+        conexao = conectar()
+        cursor = conexao.cursor()
+
+
+        cursor.execute("""
+            SELECT
+                nome_exame,
+                valor_exame
+
+            FROM atendimento_exames
+
+            WHERE atendimento_id = ?
+
+            ORDER BY nome_exame
+
+        """, (
+            id,
+        ))
+
+
+        exames = cursor.fetchall()
+
+
+        conexao.close()
+
+
+        return jsonify([
+            {
+                "nome": exame["nome_exame"],
+                "valor": exame["valor_exame"]
+            }
+
+            for exame in exames
+        ])
+
+
+
+    # ==================================================
+    # EXCLUIR ATENDIMENTO
+    # ==================================================
+
+    @app.route(
+        "/excluir_atendimento/<int:id>"
+    )
+    def excluir_atendimento(id):
+
+        conexao = conectar()
+        cursor = conexao.cursor()
+
+
+
+        cursor.execute("""
+            DELETE FROM atendimento_exames
+
+            WHERE atendimento_id = ?
+
+        """, (
+            id,
+        ))
+
+
+
+        cursor.execute("""
+            DELETE FROM atendimentos
+
+            WHERE id = ?
+
+        """, (
+            id,
+        ))
+
+
+
+        conexao.commit()
+
+        conexao.close()
+
+
+        return redirect(
+            "/atendimentos"
         )

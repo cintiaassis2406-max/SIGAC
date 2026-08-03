@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect
+from flask import render_template, request, redirect, jsonify
 from database.database import conectar
 
 
@@ -17,24 +17,19 @@ def registrar_rotas(app):
         if request.method == "POST":
 
             nome = request.form["nome"]
-            valor = request.form["valor"]
             situacao = request.form["situacao"]
 
-            if valor == "":
-                valor = None
 
             cursor.execute("""
                 INSERT INTO exames
                 (
-                    nome,
-                    valor,
-                    situacao
+                   nome,
+                   situacao
                 )
-                VALUES (?, ?, ?)
-            """, (
-                nome,
-                valor,
-                situacao
+                VALUES (?, ?)
+                """, (
+                   nome,
+                   situacao
             ))
 
             conexao.commit()
@@ -86,25 +81,19 @@ def registrar_rotas(app):
         if request.method == "POST":
 
             nome = request.form["nome"]
-            valor = request.form["valor"]
             situacao = request.form["situacao"]
-
-            if valor == "":
-                valor = None
 
             cursor.execute("""
                 UPDATE exames
                 SET
                     nome = ?,
-                    valor = ?,
                     situacao = ?
                 WHERE id = ?
-            """, (
-                nome,
-                valor,
-                situacao,
-                id
-            ))
+                """, (
+                    nome,
+                    situacao,
+                    id
+                ))
 
             conexao.commit()
 

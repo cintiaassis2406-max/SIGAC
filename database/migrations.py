@@ -6,6 +6,7 @@ def executar_migrations():
     conexao = conectar()
     cursor = conexao.cursor()
 
+
     # ===============================
     # ATUALIZA TABELA FATURAMENTOS
     # ===============================
@@ -37,6 +38,27 @@ def executar_migrations():
             cursor.execute(
                 f"ALTER TABLE faturamentos ADD COLUMN {nome} {tipo}"
             )
+
+
+    # ===============================
+    # ATUALIZA TABELA ATENDIMENTOS
+    # ===============================
+
+    cursor.execute("PRAGMA table_info(atendimentos)")
+    colunas_atendimentos = [
+        c[1]
+        for c in cursor.fetchall()
+    ]
+
+
+    if "situacao_financeira" not in colunas_atendimentos:
+
+        cursor.execute("""
+            ALTER TABLE atendimentos
+            ADD COLUMN situacao_financeira TEXT
+            DEFAULT 'FATURAR'
+        """)
+
 
     conexao.commit()
     conexao.close()

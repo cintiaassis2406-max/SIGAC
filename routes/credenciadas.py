@@ -34,7 +34,6 @@ def registrar_rotas(app):
                 </script>
                 """
 
-            tipo = request.form["tipo"]
             email = request.form["email"]
             telefone = request.form["telefone"]
             contato = request.form["contato"]
@@ -45,7 +44,6 @@ def registrar_rotas(app):
                 INSERT INTO credenciadas
                 (
                     nome,
-                    tipo_cobranca,
                     email,
                     telefone,
                     contato,
@@ -53,16 +51,15 @@ def registrar_rotas(app):
                     observacoes_internas,
                     situacao_financeira
                 )
-                VALUES (?,?,?,?,?,?,?,?)
+                VALUES (?,?,?,?,?,?,?)
             """, (
-                nome,
-                tipo,
-                email,
-                telefone,
-                contato,
-                observacoes,
-                observacoes_internas,
-                None
+               nome,
+               email,
+               telefone,
+               contato,
+               observacoes,
+               observacoes_internas,
+               None
             ))
 
             conexao.commit()
@@ -129,28 +126,26 @@ def registrar_rotas(app):
         if request.method == "POST":
 
             cursor.execute("""
-                UPDATE credenciadas
-                SET
-                    nome=?,
-                    tipo_cobranca=?,
-                    email=?,
-                    telefone=?,
-                    contato=?,
-                    observacoes=?,
-                    observacoes_internas=?,
-                    situacao_financeira=?
-                WHERE id=?
+               UPDATE credenciadas
+               SET
+                   nome=?,
+                   email=?,
+                   telefone=?,
+                   contato=?,
+                   observacoes=?,
+                   observacoes_internas=?,
+                   situacao_financeira=?
+               WHERE id=?
             """, (
-                request.form["nome"],
-                request.form["tipo"],
-                request.form["email"],
-                request.form["telefone"],
-                request.form["contato"],
-                request.form["observacoes"],
-                request.form["observacoes_internas"],
-                request.form["situacao_financeira"],
-                id
-            ))
+                   request.form["nome"],
+                   request.form["email"],
+                   request.form["telefone"],
+                   request.form["contato"],
+                   request.form["observacoes"],
+                   request.form["observacoes_internas"],
+                   request.form["situacao_financeira"],
+                   id
+                ))
 
             conexao.commit()
             conexao.close()

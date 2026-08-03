@@ -38,105 +38,89 @@
 
                     <div class="col-md-4">
 
-                        <label class="form-label">
+    <label class="form-label">
+        Credenciada
+    </label>
 
-                            Credenciada
+    <div class="input-group">
 
-                        </label>
+        <select
+            class="form-select"
+            id="credenciada"
+            name="credenciada"
+            required>
 
-                        <div class="input-group">
+            <option value="">Selecione</option>
 
-                            <select
-                                class="form-select"
-                                id="credenciada"
-                                name="credenciada"
-                                required>
+            {% for c in credenciadas %}
+            <option value="{{ c.id }}">
+                {{ c.nome }}
+            </option>
+            {% endfor %}
 
-                                <option value="">
+        </select>
 
-                                    Selecione
+        <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#modalCredenciada">
 
-                                </option>
+            +
 
-                                {% for c in credenciadas %}
+        </button>
 
-                                <option value="{{ c.id }}">
+    </div>
 
-                                    {{ c.nome }}
+</div>
 
-                                </option>
+<div class="col-md-5">
 
-                                {% endfor %}
+    <label class="form-label">
+        Empresa
+    </label>
 
-                            </select>
+    <div class="input-group">
 
-                            <button
-                                type="button"
-                                class="btn btn-primary"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalCredenciada">
+        <select
+            class="form-select"
+            id="empresa"
+            name="empresa"
+            required>
 
-                                +
+            <option value="">
+                Selecione a Credenciada
+            </option>
 
-                            </button>
+            {% for e in empresas %}
 
-                        </div>
+            <option
+                value="{{ e.id }}"
+                data-credenciada="{{ e.credenciada_id }}">
 
-                    </div>
+                {{ e.nome }}
 
-                    <div class="col-md-5">
+            </option>
 
-                        <label class="form-label">
+            {% endfor %}
 
-                            Empresa
+        </select>
 
-                        </label>
+        <button
+            type="button"
+            class="btn btn-success"
+            data-bs-toggle="modal"
+            data-bs-target="#modalEmpresa">
 
-                        <div class="input-group">
+            +
 
-                            <select
-                                class="form-select"
-                                id="empresa"
-                                name="empresa"
-                                required>
+        </button>
 
-                                <option value="">
+    </div>
 
-                                    Selecione a Credenciada
+</div>
 
-                                </option>
-
-                                {% for e in empresas %}
-
-                                <option
-                                    value="{{ e.id }}"
-                                    data-credenciada="{{ e.credenciada_id }}">
-
-                                    {{ e.nome }}
-
-                                </option>
-
-                                {% endfor %}
-
-                            </select>
-
-                            <button
-                                type="button"
-                                class="btn btn-success"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalEmpresa">
-
-                                +
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-                                <br>
-
+</div>
                 <div class="mb-3">
 
                     <label class="form-label">
@@ -181,6 +165,17 @@
                 <hr>
 
                 <h5>Exames</h5>
+
+                <button
+                    type="button"
+                    class="btn btn-outline-primary btn-sm mb-3"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalExame">
+
+                    ➕ Novo Exame
+
+                </button>
+
 
                 <div class="row" id="listaExames">
 
@@ -405,26 +400,7 @@
 
     + Novo Exame
 
-</button>
-                    <div class="mb-3">
-
-                        <label class="form-label">
-
-                            Tipo de Cobrança
-
-                        </label>
-
-                        <select
-                            class="form-select"
-                            name="tipo_cobranca">
-
-                            <option value="Por Atendimento">Por Atendimento</option>
-
-                            <option value="Por Exame">Por Exame</option>
-
-                        </select>
-
-                    </div>
+                </button>
 
                 </form>
 

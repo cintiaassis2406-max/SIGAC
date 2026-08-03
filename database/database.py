@@ -25,7 +25,6 @@ def criar_banco():
 
         nome TEXT NOT NULL,
 
-        tipo_cobranca TEXT NOT NULL,
 
         email TEXT,
 
@@ -119,6 +118,8 @@ CREATE TABLE IF NOT EXISTS exames(
         colaborador TEXT NOT NULL,
 
         tipo_atendimento TEXT NOT NULL,
+
+        situacao_financeira TEXT NOT NULL DEFAULT 'FATURAR',
 
         observacoes TEXT,
 
