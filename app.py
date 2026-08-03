@@ -14,6 +14,8 @@ from routes.usuarios import registrar_rotas as registrar_usuarios
 from routes.relatorios import registrar_rotas as registrar_relatorios
 from database.migrations import executar_migrations
 
+app = Flask(__name__)
+
 criar_banco()
 executar_migrations()
 
@@ -27,6 +29,7 @@ registrar_pdf(app)
 registrar_excel(app)
 registrar_usuarios(app)
 registrar_relatorios(app)
+
 @app.route("/")
 def login():
     return render_template("login.html")
@@ -84,4 +87,4 @@ def dashboard():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)
