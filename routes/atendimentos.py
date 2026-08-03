@@ -73,7 +73,7 @@ def registrar_rotas(app):
                 valor,
                 situacao
             )
-            VALUES (?, ?)
+            VALUES (?, ?, ?)
         """, (
             nome,
             valor,
