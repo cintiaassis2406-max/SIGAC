@@ -13,7 +13,6 @@ from routes.excel import registrar_rotas as registrar_excel
 from routes.usuarios import registrar_rotas as registrar_usuarios
 from routes.relatorios import registrar_rotas as registrar_relatorios
 from database.migrations import executar_migrations
-gunicorn app:app
 
 criar_banco()
 executar_migrations()
