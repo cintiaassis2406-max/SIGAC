@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect
+from flask import render_template, request, redirect, jsonify
 from database.database import conectar
 
 
@@ -99,6 +99,71 @@ def registrar_rotas(app):
             pesquisa=pesquisa
         )
 
+    @app.route("/nova_credenciada", methods=["POST"])
+    def nova_credenciada():
+
+        conexao = conectar()
+        cursor = conexao.cursor()
+
+        nome = request.form.get("nome")
+
+        if not nome:
+
+            conexao.close()
+
+            return jsonify({
+                "erro": "Informe o nome."
+            }), 400
+
+        cursor.execute("""
+            SELECT id
+            FROM credenciadas
+            WHERE UPPER(nome)=UPPER(?)
+        """, (nome,))
+
+        existente = cursor.fetchone()
+
+        if existente:
+
+            conexao.close()
+
+            return jsonify({
+                "id": existente["id"],
+                "nome": nome
+            })
+
+        cursor.execute("""
+            INSERT INTO credenciadas
+            (
+                nome,
+                email,
+                telefone,
+                contato,
+                observacoes,
+                observacoes_internas,
+                situacao_financeira
+            )
+            VALUES (?,?,?,?,?,?,?)
+        """, (
+            nome,
+            "",
+            "",
+            "",
+            "",
+            "",
+            None
+        ))
+
+        conexao.commit()
+
+        novo_id = cursor.lastrowid
+
+        conexao.close()
+
+        return jsonify({
+            "id": novo_id,
+            "nome": nome
+        })
 
     @app.route("/excluir_credenciada/<int:id>")
     def excluir_credenciada(id):

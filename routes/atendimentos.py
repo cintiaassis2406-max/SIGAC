@@ -6,42 +6,6 @@ from datetime import date
 def registrar_rotas(app):
 
     # ==================================================
-    # NOVA CREDENCIADA (AJAX)
-    # ==================================================
-
-    @app.route("/nova_credenciada", methods=["POST"])
-    def nova_credenciada():
-
-        conexao = conectar()
-        cursor = conexao.cursor()
-
-        nome = request.form["nome"].strip()
-
-        cursor.execute("""
-            INSERT INTO credenciadas
-            (
-                nome,
-                tipo_cobranca
-            )
-            VALUES (?, ?)
-        """, (
-            nome,
-            "Exames"
-        ))
-
-        conexao.commit()
-
-        novo_id = cursor.lastrowid
-
-        conexao.close()
-
-        return jsonify({
-            "id": novo_id,
-            "nome": nome
-        })
-
-
-    # ==================================================
     # NOVA EMPRESA (AJAX)
     # ==================================================
 
@@ -90,6 +54,13 @@ def registrar_rotas(app):
         cursor = conexao.cursor()
 
         nome = request.form["nome"].strip()
+        valor = request.form.get(
+            "valor",
+            "0"
+        )
+
+        valor = valor.replace(",", ".")
+
         situacao = request.form.get(
             "situacao",
             "Ativo"
@@ -99,11 +70,13 @@ def registrar_rotas(app):
             INSERT INTO exames
             (
                 nome,
+                valor,
                 situacao
             )
             VALUES (?, ?)
         """, (
             nome,
+            valor,
             situacao
         ))
 
@@ -134,9 +107,9 @@ def registrar_rotas(app):
 
             data_atendimento = request.form["data_atendimento"]
 
-            credenciada_id = request.form["credenciada_id"]
+            credenciada_id = request.form["credenciada"]
 
-            empresa_id = request.form["empresa_id"]
+            empresa_id = request.form["empresa"]
 
             colaborador = request.form["colaborador"].strip()
 
@@ -333,7 +306,16 @@ def registrar_rotas(app):
 
         exames = cursor.fetchall()
 
+        cursor.execute("""
+            SELECT
+                id,
+                nome,
+                credenciada_id
+            FROM empresas
+            ORDER BY nome
+        """)
 
+        empresas = cursor.fetchall()
 
         conexao.close()
 
@@ -342,9 +324,10 @@ def registrar_rotas(app):
             "atendimentos.html",
             atendimentos=lista,
             credenciadas=credenciadas,
+            empresas=empresas,
             exames=exames,
             pesquisa=pesquisa,
-            hoje=date.today()
+            data_hoje=date.today().strftime("%Y-%m-%d")
         )
 
 
@@ -409,9 +392,9 @@ def registrar_rotas(app):
 
             data_atendimento = request.form["data_atendimento"]
 
-            credenciada_id = request.form["credenciada_id"]
+            credenciada_id = request.form["credenciada"]
 
-            empresa_id = request.form["empresa_id"]
+            empresa_id = request.form["empresa"]
 
             colaborador = request.form["colaborador"]
 

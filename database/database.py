@@ -121,6 +121,7 @@ CREATE TABLE IF NOT EXISTS exames(
 
         situacao_financeira TEXT NOT NULL DEFAULT 'FATURAR',
 
+
         observacoes TEXT,
 
         FOREIGN KEY (credenciada_id)
