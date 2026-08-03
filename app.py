@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, session, redirect, request
 
 from database.database import criar_banco, conectar
 
@@ -16,6 +16,8 @@ from database.migrations import executar_migrations
 
 app = Flask(__name__)
 
+app.secret_key = "SIGAC_CHAVE_SECRETA_2026"
+
 criar_banco()
 executar_migrations()
 
@@ -30,13 +32,62 @@ registrar_excel(app)
 registrar_usuarios(app)
 registrar_relatorios(app)
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def login():
-    return render_template("login.html")
 
+    if request.method == "POST":
+
+        usuario = request.form.get("usuario")
+        senha = request.form.get("senha")
+
+        if not usuario or not senha:
+            return render_template(
+                "login.html",
+                erro="Informe usuário e senha"
+            )
+
+        conexao = conectar()
+        cursor = conexao.cursor()
+
+        cursor.execute("""
+            SELECT *
+            FROM usuarios
+            WHERE usuario = ?
+            AND ativo = 1
+        """, (usuario,))
+
+        dados = cursor.fetchone()
+
+        conexao.close()
+
+        if dados:
+
+            senha_banco = dados["senha"]
+
+            import bcrypt
+
+            if bcrypt.checkpw(
+                senha.encode("utf-8"),
+                senha_banco.encode("utf-8")
+            ):
+
+                session["usuario"] = dados["usuario"]
+                session["perfil"] = dados["perfil"]
+
+                return redirect("/dashboard")
+
+        return render_template(
+            "login.html",
+            erro="Usuário ou senha inválidos"
+        )
+
+    return render_template("login.html")
 
 @app.route("/dashboard")
 def dashboard():
+
+    if "usuario" not in session:
+        return redirect("/")
 
     conexao = conectar()
     cursor = conexao.cursor()
