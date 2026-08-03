@@ -59,6 +59,32 @@ def executar_migrations():
             DEFAULT 'FATURAR'
         """)
 
+    # ==========================================
+    # CRIA USUÁRIO ADMIN PADRÃO
+    # ==========================================
+
+    cursor.execute("SELECT COUNT(*) FROM usuarios")
+
+    if cursor.fetchone()[0] == 0:
+
+        import bcrypt
+
+        senha = bcrypt.hashpw(
+            "123456".encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
+
+        cursor.execute("""
+            INSERT INTO usuarios
+            (nome, usuario, senha, perfil, ativo)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            "Administrador",
+            "admin",
+            senha,
+            "Administrador",
+            1
+        ))
 
     conexao.commit()
     conexao.close()
