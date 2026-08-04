@@ -578,12 +578,12 @@
                         </label>
 
                         <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value="0.00"
+                            type="text"
+                            id="valor"
                             name="valor"
-                            class="form-control">
+                            class="form-control"
+                            placeholder="0,00">
+                            
 
                     </div>
 
@@ -790,6 +790,44 @@ document.getElementById("salvarExame").addEventListener("click", function () {
     });
 
 });
+</script>
+<script>
+
+    const campoValor = document.getElementById("valor");
+
+
+    campoValor.addEventListener("input", function(){
+
+        let valor = this.value;
+
+
+        valor = valor.replace(/\D/g, "");
+
+
+        if (valor === "") {
+
+            this.value = "";
+
+            return;
+
+        }
+
+
+        valor = (
+            parseInt(valor) / 100
+        ).toFixed(2);
+
+
+        valor = valor.replace(
+            ".",
+            ","
+        );
+
+
+        this.value = valor;
+
+    });
+
 </script>
 
 {% endblock %}

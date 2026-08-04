@@ -78,9 +78,11 @@ Cadastro de Exames
 
                         <input
                               type="text"
+                              id="valor"
                               name="valor"
                               class="form-control"
-                              value="0,00">
+                              value=""
+                              placeholder="0,00">
                             
 
                     </div>
@@ -273,5 +275,46 @@ Cadastro de Exames
     </div>
 
 </div>
+
+<script>
+
+    const campoValor = document.getElementById("valor");
+
+
+    campoValor.addEventListener("input", function(){
+
+        let valor = this.value;
+
+
+        valor = valor.replace(/\D/g, "");
+
+
+        if (valor === "") {
+
+            this.value = "";
+
+            return;
+
+        }
+
+
+        valor = (
+            parseInt(valor) / 100
+        ).toFixed(2);
+
+
+        valor = valor.replace(
+            ".",
+            ","
+        );
+
+
+        this.value = valor;
+
+
+    });
+
+
+</script>
 
 {% endblock %}
