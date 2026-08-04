@@ -14,22 +14,31 @@ def registrar_rotas(app):
         # SALVAR EXAME
         # ==========================
 
-        if request.method == "POST":
+                if request.method == "POST":
 
-            nome = request.form["nome"]
+            nome = request.form["nome"].strip()
+
+            valor = request.form.get(
+                "valor",
+                "0"
+            )
+
+            valor = valor.replace(",", ".")
+
             situacao = request.form["situacao"]
-
 
             cursor.execute("""
                 INSERT INTO exames
                 (
-                   nome,
-                   situacao
+                    nome,
+                    valor,
+                    situacao
                 )
-                VALUES (?, ?)
-                """, (
-                   nome,
-                   situacao
+                VALUES (?, ?, ?)
+            """, (
+                nome,
+                valor,
+                situacao
             ))
 
             conexao.commit()
@@ -78,22 +87,32 @@ def registrar_rotas(app):
         conexao = conectar()
         cursor = conexao.cursor()
 
-        if request.method == "POST":
+                if request.method == "POST":
 
-            nome = request.form["nome"]
+            nome = request.form["nome"].strip()
+
+            valor = request.form.get(
+                "valor",
+                "0"
+            )
+
+            valor = valor.replace(",", ".")
+
             situacao = request.form["situacao"]
 
             cursor.execute("""
                 UPDATE exames
                 SET
                     nome = ?,
+                    valor = ?,
                     situacao = ?
                 WHERE id = ?
-                """, (
-                    nome,
-                    situacao,
-                    id
-                ))
+            """, (
+                nome,
+                valor,
+                situacao,
+                id
+            ))
 
             conexao.commit()
 
