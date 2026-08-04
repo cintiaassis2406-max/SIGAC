@@ -58,7 +58,27 @@ def executar_migrations():
             ADD COLUMN situacao_financeira TEXT
             DEFAULT 'FATURAR'
         """)
+    # ===============================
+    # ATUALIZA TABELA EXAMES
+    # ===============================
 
+    cursor.execute("PRAGMA table_info(exames)")
+    colunas_exames = [c[1] for c in cursor.fetchall()]
+
+    if "valor" not in colunas_exames:
+
+        cursor.execute("""
+            ALTER TABLE exames
+            ADD COLUMN valor REAL DEFAULT 0
+        """)
+
+    if "situacao" not in colunas_exames:
+
+        cursor.execute("""
+            ALTER TABLE exames
+            ADD COLUMN situacao TEXT DEFAULT 'Ativo'
+        """)
+        
     # ==========================================
     # CRIA USUÁRIO ADMIN PADRÃO
     # ==========================================
