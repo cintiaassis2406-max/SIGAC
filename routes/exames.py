@@ -87,7 +87,7 @@ def registrar_rotas(app):
         conexao = conectar()
         cursor = conexao.cursor()
 
-                if request.method == "POST":
+        if request.method == "POST":
 
             nome = request.form["nome"].strip()
 
