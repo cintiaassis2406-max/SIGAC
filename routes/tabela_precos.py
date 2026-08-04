@@ -75,7 +75,7 @@ def registrar_rotas(app):
                 SELECT
                     e.id,
                     e.nome,
-                    COALESCE(pc.valor, 0) AS valor
+                    COALESCE(pc.valor, e.valor, 0) AS valor
                 FROM exames e
 
                 LEFT JOIN precos_credenciada pc
