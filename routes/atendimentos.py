@@ -155,6 +155,7 @@ def registrar_rotas(app):
                 "exames"
             )
 
+            print("EXAMES RECEBIDOS:", exames)
 
             for exame_id in exames:
 
