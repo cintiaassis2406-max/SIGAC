@@ -160,7 +160,9 @@ def registrar_rotas(app):
             for exame_id in exames:
 
                 cursor.execute("""
-                    SELECT nome
+                    SELECT
+                        nome,
+                        valor
                     FROM exames
                     WHERE id = ?
                 """, (
@@ -182,10 +184,13 @@ def registrar_rotas(app):
 
                 preco = cursor.fetchone()
 
-                valor = 0
-
                 if preco:
+
                     valor = preco["valor"]
+
+                else:
+
+                    valor = exame["valor"]
 
 
                 cursor.execute("""
