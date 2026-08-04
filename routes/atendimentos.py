@@ -413,9 +413,10 @@ def registrar_rotas(app):
 
             tipo_atendimento = request.form["tipo_atendimento"]
 
-            situacao_financeira = request.form[
-                "situacao_financeira"
-            ]
+            situacao_financeira = request.form.get(
+                "situacao_financeira",
+                ""
+            )
 
             observacoes = request.form.get(
                 "observacoes",
