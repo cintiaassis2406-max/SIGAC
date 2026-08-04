@@ -14,7 +14,7 @@ def registrar_rotas(app):
         # SALVAR EXAME
         # ==========================
 
-                if request.method == "POST":
+        if request.method == "POST":
 
             nome = request.form["nome"].strip()
 
