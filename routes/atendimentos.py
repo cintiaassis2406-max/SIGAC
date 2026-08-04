@@ -192,6 +192,13 @@ def registrar_rotas(app):
 
                     valor = exame["valor"]
 
+                print(
+                    "Exame:",
+                    exame["nome"],
+                    "| Valor:",
+                    valor
+                )
+
 
                 cursor.execute("""
                     INSERT INTO atendimento_exames
