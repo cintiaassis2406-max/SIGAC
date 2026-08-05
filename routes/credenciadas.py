@@ -19,7 +19,7 @@ def registrar_rotas(app):
             nome = request.form["nome"]
 
             cursor.execute(
-                "SELECT id FROM credenciadas WHERE UPPER(nome)=UPPER(?)",
+                "SELECT id FROM credenciadas WHERE UPPER(nome)=UPPER(%s)",
                 (nome,)
             )
 
@@ -51,7 +51,7 @@ def registrar_rotas(app):
                     observacoes_internas,
                     situacao_financeira
                 )
-                VALUES (?,?,?,?,?,?,?)
+                VALUES (%s,%s,%s,%s,%s,%s,%s)
             """, (
                nome,
                email,
@@ -77,7 +77,7 @@ def registrar_rotas(app):
             cursor.execute("""
                 SELECT *
                 FROM credenciadas
-                WHERE nome LIKE ?
+                WHERE nome LIKE %s
                 ORDER BY nome
             """, (f"%{pesquisa}%",))
 
@@ -118,7 +118,7 @@ def registrar_rotas(app):
         cursor.execute("""
             SELECT id
             FROM credenciadas
-            WHERE UPPER(nome)=UPPER(?)
+            WHERE UPPER(nome)=UPPER(%s)
         """, (nome,))
 
         existente = cursor.fetchone()
@@ -143,7 +143,7 @@ def registrar_rotas(app):
                 observacoes_internas,
                 situacao_financeira
             )
-            VALUES (?,?,?,?,?,?,?)
+            VALUES (%s,%s,%s,%s,%s,%s,%s)
         """, (
             nome,
             "",
@@ -172,7 +172,7 @@ def registrar_rotas(app):
         cursor = conexao.cursor()
 
         cursor.execute(
-            "DELETE FROM credenciadas WHERE id=?",
+            "DELETE FROM credenciadas WHERE id=%s",
             (id,)
         )
 
@@ -193,14 +193,14 @@ def registrar_rotas(app):
             cursor.execute("""
                UPDATE credenciadas
                SET
-                   nome=?,
-                   email=?,
-                   telefone=?,
-                   contato=?,
-                   observacoes=?,
-                   observacoes_internas=?,
-                   situacao_financeira=?
-               WHERE id=?
+                   nome=%s,
+                   email=%s,
+                   telefone=%s,
+                   contato=%s,
+                   observacoes=%s,
+                   observacoes_internas=%s,
+                   situacao_financeira=%s
+               WHERE id=%s
             """, (
                    request.form["nome"],
                    request.form["email"],
@@ -218,7 +218,7 @@ def registrar_rotas(app):
             return redirect("/credenciadas")
 
         cursor.execute(
-            "SELECT * FROM credenciadas WHERE id=?",
+            "SELECT * FROM credenciadas WHERE id=%s",
             (id,)
         )
 

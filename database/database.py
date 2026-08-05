@@ -1,12 +1,9 @@
-import sqlite3
+from database.postgres import conectar_postgres
 
 
 def conectar():
 
-    conexao = sqlite3.connect("sigac.db")
-    conexao.row_factory = sqlite3.Row
-
-    return conexao
+    return conectar_postgres()
 
 
 def criar_banco():
@@ -21,7 +18,7 @@ def criar_banco():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS credenciadas(
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
 
         nome TEXT NOT NULL,
 
@@ -48,7 +45,7 @@ def criar_banco():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS empresas(
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
 
         credenciada_id INTEGER NOT NULL,
 
@@ -67,7 +64,7 @@ def criar_banco():
     cursor.execute("""
 CREATE TABLE IF NOT EXISTS exames(
 
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
 
     nome TEXT NOT NULL,
 
@@ -82,7 +79,7 @@ CREATE TABLE IF NOT EXISTS exames(
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS precos_credenciada(
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
 
         credenciada_id INTEGER NOT NULL,
 
@@ -107,7 +104,7 @@ CREATE TABLE IF NOT EXISTS exames(
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS atendimentos(
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
 
         data_atendimento DATE NOT NULL,
 
@@ -140,7 +137,7 @@ CREATE TABLE IF NOT EXISTS exames(
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS atendimento_exames(
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
 
         atendimento_id INTEGER NOT NULL,
 
@@ -167,7 +164,7 @@ CREATE TABLE IF NOT EXISTS exames(
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS faturamentos(
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
 
         credenciada_id INTEGER NOT NULL,
 
@@ -210,7 +207,7 @@ CREATE TABLE IF NOT EXISTS exames(
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS faturamento_itens(
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
 
         faturamento_id INTEGER NOT NULL,
 
@@ -236,7 +233,7 @@ CREATE TABLE IF NOT EXISTS exames(
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS usuarios(
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
 
         nome TEXT NOT NULL,
 

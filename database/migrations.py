@@ -11,8 +11,13 @@ def executar_migrations():
     # ATUALIZA TABELA FATURAMENTOS
     # ===============================
 
-    cursor.execute("PRAGMA table_info(faturamentos)")
-    colunas = [c[1] for c in cursor.fetchall()]
+    cursor.execute("""
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'faturamentos'
+    """)
+
+    colunas = [c["column_name"] for c in cursor.fetchall()]
 
     novas_colunas = [
 
@@ -44,9 +49,14 @@ def executar_migrations():
     # ATUALIZA TABELA ATENDIMENTOS
     # ===============================
 
-    cursor.execute("PRAGMA table_info(atendimentos)")
+    cursor.execute("""
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'atendimentos'
+    """)
+
     colunas_atendimentos = [
-        c[1]
+        c["column_name"]
         for c in cursor.fetchall()
     ]
 
@@ -62,8 +72,16 @@ def executar_migrations():
     # ATUALIZA TABELA EXAMES
     # ===============================
 
-    cursor.execute("PRAGMA table_info(exames)")
-    colunas_exames = [c[1] for c in cursor.fetchall()]
+    cursor.execute("""
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'exames'
+    """)
+
+    colunas_exames = [
+        c["column_name"]
+        for c in cursor.fetchall()
+    ]
 
     if "valor" not in colunas_exames:
 
@@ -83,9 +101,14 @@ def executar_migrations():
     # CRIA USUÁRIO ADMIN PADRÃO
     # ==========================================
 
-    cursor.execute("SELECT COUNT(*) FROM usuarios")
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM usuarios
+    """)
 
-    if cursor.fetchone()[0] == 0:
+    resultado = cursor.fetchone()
+
+    if resultado["total"] == 0:
 
         import bcrypt
 
@@ -97,7 +120,7 @@ def executar_migrations():
         cursor.execute("""
             INSERT INTO usuarios
             (nome, usuario, senha, perfil, ativo)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s)
         """, (
             "Administrador",
             "admin",
@@ -105,6 +128,7 @@ def executar_migrations():
             "Administrador",
             1
         ))
+
 
     conexao.commit()
     conexao.close()

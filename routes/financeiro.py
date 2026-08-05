@@ -18,9 +18,9 @@ def registrar_rotas(app):
         cursor.execute("""
             SELECT id
             FROM faturamentos
-            WHERE credenciada_id = ?
-              AND mes = ?
-              AND ano = ?
+            WHERE credenciada_id = %s
+              AND mes = %s
+              AND ano = %s
         """, (credenciada, mes, ano))
 
         faturamento = cursor.fetchone()
@@ -29,8 +29,8 @@ def registrar_rotas(app):
 
             cursor.execute("""
                 UPDATE faturamentos
-                SET status = ?
-                WHERE id = ?
+                SET status = %s
+                WHERE id = %s
             """, (status, faturamento["id"]))
 
         else:
@@ -43,7 +43,7 @@ def registrar_rotas(app):
                     ano,
                     status
                 )
-                VALUES (?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s)
             """, (credenciada, mes, ano, status))
 
         conexao.commit()
@@ -115,7 +115,7 @@ def registrar_rotas(app):
         if credenciada_id:
 
             sql += """
-                AND a.credenciada_id = ?
+                AND a.credenciada_id = %s
             """
 
             parametros.append(credenciada_id)
@@ -127,10 +127,10 @@ def registrar_rotas(app):
         if mes:
 
             sql += """
-                AND strftime('%m', a.data_atendimento)=?
+                AND EXTRACT(MONTH FROM a.data_atendimento) = %s
             """
 
-            parametros.append(f"{int(mes):02}")
+            parametros.append(int(mes))
 
         # ==========================
         # FILTRO ANO
@@ -139,10 +139,10 @@ def registrar_rotas(app):
         if ano:
 
             sql += """
-                AND strftime('%Y', a.data_atendimento)=?
+               AND EXTRACT(YEAR FROM a.data_atendimento) = %s
             """
 
-            parametros.append(str(ano))
+            parametros.append(int(ano))
 
         # ==========================
         # AGRUPAMENTO
@@ -194,7 +194,7 @@ def registrar_rotas(app):
         if credenciada_id:
 
             sql_atendimentos += """
-                AND a.credenciada_id = ?
+                AND a.credenciada_id = %s
             """
 
             parametros_atendimentos.append(credenciada_id)
@@ -202,20 +202,21 @@ def registrar_rotas(app):
         if mes:
 
             sql_atendimentos += """
-                AND strftime('%m', a.data_atendimento)=?
+                AND EXTRACT(MONTH FROM a.data_atendimento) = %s
             """
 
-            parametros_atendimentos.append(f"{int(mes):02}")
+            parametros_atendimentos.append(int(mes))
 
         if ano:
 
             sql_atendimentos += """
-                AND strftime('%Y', a.data_atendimento)=?
+                AND EXTRACT(YEAR FROM a.data_atendimento) = %s
             """
 
-            parametros_atendimentos.append(str(ano))
+            parametros_atendimentos.append(int(ano))
 
         cursor.execute(sql_atendimentos, parametros_atendimentos)
+
 
         resultado = cursor.fetchone()
 
@@ -232,9 +233,9 @@ def registrar_rotas(app):
             cursor.execute("""
                 SELECT status
                 FROM faturamentos
-                WHERE credenciada_id = ?
-                  AND mes = ?
-                  AND ano = ?
+                WHERE credenciada_id = %s
+                  AND mes = %s
+                  AND ano = %s
             """, (credenciada_id, mes, ano))
 
             faturamento = cursor.fetchone()

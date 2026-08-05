@@ -52,7 +52,7 @@ def login():
         cursor.execute("""
             SELECT *
             FROM usuarios
-            WHERE usuario = ?
+            WHERE usuario = %s
             AND ativo = 1
         """, (usuario,))
 

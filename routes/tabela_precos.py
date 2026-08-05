@@ -20,7 +20,7 @@ def registrar_rotas(app):
 
             cursor.execute("""
                 DELETE FROM precos_credenciada
-                WHERE credenciada_id = ?
+                WHERE credenciada_id = %s
             """, (credenciada_id,))
 
             for campo in request.form:
@@ -39,7 +39,7 @@ def registrar_rotas(app):
                                 exame_id,
                                 valor
                             )
-                            VALUES (?, ?, ?)
+                            VALUES (%s, %s, %s)
                         """, (
                             credenciada_id,
                             exame_id,
@@ -80,7 +80,7 @@ def registrar_rotas(app):
 
                 LEFT JOIN precos_credenciada pc
                     ON pc.exame_id = e.id
-                   AND pc.credenciada_id = ?
+                   AND pc.credenciada_id = %s
 
                 WHERE e.situacao = 'Ativo'
             """
@@ -90,7 +90,7 @@ def registrar_rotas(app):
             if pesquisa:
 
                 sql += """
-                    AND e.nome LIKE ?
+                    AND e.nome ILIKE %s
                 """
 
                 parametros.append(f"%{pesquisa}%")
