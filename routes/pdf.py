@@ -26,90 +26,108 @@ def registrar_rotas(app):
         credenciada_id = request.args.get("credenciada")
         mes = request.args.get("mes")
         ano = request.args.get("ano")
+        tipo = request.args.get("tipo")
+
 
         sql = """
+            SELECT
+                a.colaborador,
+                e.nome AS empresa,
+                a.data_atendimento,
+                a.tipo_atendimento,
+                STRING_AGG(ae.nome_exame, ', ') AS exames,
+                COALESCE(SUM(ae.valor_exame), 0) AS valor
 
-        SELECT
+            FROM atendimentos a
 
-            a.colaborador,
+            INNER JOIN empresas e
+                ON e.id = a.empresa_id
 
-            e.nome AS empresa,
+            LEFT JOIN atendimento_exames ae
+                ON ae.atendimento_id = a.id
 
-            a.data_atendimento,
-
-            a.tipo_atendimento,
-
-            GROUP_CONCAT(ae.nome_exame, ', ') AS exames,
-
-            COALESCE(SUM(ae.valor_exame),0) AS valor
-
-        FROM atendimentos a
-
-        INNER JOIN empresas e
-            ON e.id = a.empresa_id
-
-        LEFT JOIN atendimento_exames ae
-            ON ae.atendimento_id = a.id
-
-        WHERE 1=1
-
+            WHERE 1=1
         """
 
+
         parametros = []
+
 
         if credenciada_id:
 
             sql += """
-                AND a.credenciada_id=?
+                AND a.credenciada_id=%s
             """
 
-            parametros.append(credenciada_id)
+            parametros.append(
+                credenciada_id
+            )
+
 
         if mes:
 
             sql += """
-                AND strftime('%m',a.data_atendimento)=?
+                AND TO_CHAR(a.data_atendimento,'MM')=%s
             """
 
-            parametros.append(f"{int(mes):02}")
+            parametros.append(
+                f"{int(mes):02}"
+            )
+
 
         if ano:
 
             sql += """
-                AND strftime('%Y',a.data_atendimento)=?
+                AND TO_CHAR(a.data_atendimento,'YYYY')=%s
             """
 
-            parametros.append(str(ano))
+            parametros.append(
+                str(ano)
+            )
+
+        if tipo:
+
+            sql += """
+                AND a.tipo_atendimento = %s
+            """
+
+            parametros.append(tipo)
 
         sql += """
+            GROUP BY
+                a.id,
+                e.nome
 
-        GROUP BY
-
-            a.id
-
-        ORDER BY
-
-            a.colaborador
-
+            ORDER BY
+                a.colaborador
         """
 
-        cursor.execute(sql, parametros)
+
+        cursor.execute(
+            sql,
+            parametros
+        )
+
 
         dados = cursor.fetchall()
+
 
         arquivo = tempfile.NamedTemporaryFile(
             delete=False,
             suffix=".pdf"
         )
 
+
         pdf = SimpleDocTemplate(
             arquivo.name,
-            pagesize=(29.7*cm,21*cm)
+            pagesize=(29.7 * cm, 21 * cm)
         )
+
 
         estilos = getSampleStyleSheet()
 
         elementos = []
+
 
         elementos.append(
 
@@ -120,103 +138,119 @@ def registrar_rotas(app):
 
         )
 
-        elementos.append(
-            Paragraph(
-                "<br/>",
-                estilos["Normal"]
-            )
-        )
 
         tabela = [
 
             [
-
                 "Colaborador",
-
                 "Empresa",
-
                 "Data",
-
                 "Tipo",
-
                 "Exames",
-
                 "Valor"
-
             ]
 
         ]
+
+
         total_geral = 0
+
 
         for item in dados:
 
-            tabela.append([
+            tabela.append(
 
-                item["colaborador"],
+                [
 
-                item["empresa"],
+                    item["colaborador"],
 
-                item["data_atendimento"],
+                    item["empresa"],
 
-                item["tipo_atendimento"],
+                    str(item["data_atendimento"]),
 
-                item["exames"] if item["exames"] else "",
+                    item["tipo_atendimento"],
 
-                f'R$ {item["valor"]:.2f}'
+                    item["exames"] if item["exames"] else "",
 
-            ])
+                    f'R$ {item["valor"]:.2f}'
+
+                ]
+
+            )
+
 
             total_geral += item["valor"]
 
-        tabela.append([
 
-            "",
 
-            "",
+        tabela.append(
 
-            "",
+            [
 
-            "",
+                "",
+                "",
+                "",
+                "",
+                "TOTAL",
+                f'R$ {total_geral:.2f}'
 
-            "TOTAL",
-
-            f'R$ {total_geral:.2f}'
-
-        ])
-
-        tabela_pdf = Table(tabela)
-
-        tabela_pdf.setStyle(
-
-            TableStyle([
-
-                ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#0d6efd")),
-
-                ("TEXTCOLOR", (0,0), (-1,0), colors.white),
-
-                ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
-
-                ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
-
-                ("BACKGROUND", (0,1), (-1,-2), colors.beige),
-
-                ("BACKGROUND", (0,-1), (-1,-1), colors.lightgrey),
-
-                ("FONTNAME", (0,-1), (-1,-1), "Helvetica-Bold"),
-
-                ("ALIGN", (5,1), (5,-1), "RIGHT"),
-
-                ("BOTTOMPADDING", (0,0), (-1,0), 10)
-
-            ])
+            ]
 
         )
 
-        elementos.append(tabela_pdf)
 
-        pdf.build(elementos)
+        tabela_pdf = Table(
+            tabela
+        )
+
+
+        tabela_pdf.setStyle(
+
+            TableStyle(
+
+                [
+
+                    (
+                        "GRID",
+                        (0,0),
+                        (-1,-1),
+                        0.5,
+                        colors.grey
+                    ),
+
+                    (
+                        "BACKGROUND",
+                        (0,0),
+                        (-1,0),
+                        colors.lightgrey
+                    ),
+
+                    (
+                        "FONTNAME",
+                        (0,0),
+                        (-1,0),
+                        "Helvetica-Bold"
+                    )
+
+                ]
+
+            )
+
+        )
+
+
+        elementos.append(
+            tabela_pdf
+        )
+
+
+        pdf.build(
+            elementos
+        )
+
 
         conexao.close()
+
 
         return send_file(
 

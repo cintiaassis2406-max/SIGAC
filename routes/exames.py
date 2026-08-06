@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, jsonify
+from flask import render_template, request, redirect
 from database.database import conectar
 
 
@@ -10,10 +10,6 @@ def registrar_rotas(app):
         conexao = conectar()
         cursor = conexao.cursor()
 
-        # ==========================
-        # SALVAR EXAME
-        # ==========================
-
         if request.method == "POST":
 
             nome = request.form["nome"].strip()
@@ -27,6 +23,7 @@ def registrar_rotas(app):
 
             situacao = request.form["situacao"]
 
+
             cursor.execute("""
                 INSERT INTO exames
                 (
@@ -34,31 +31,34 @@ def registrar_rotas(app):
                     valor,
                     situacao
                 )
-                VALUES (?, ?, ?)
+                VALUES (%s, %s, %s)
             """, (
                 nome,
                 valor,
                 situacao
             ))
 
+
             conexao.commit()
+
+            conexao.close()
 
             return redirect("/exames")
 
-        # ==========================
-        # PESQUISA
-        # ==========================
 
         pesquisa = request.args.get("pesquisa", "")
+
 
         if pesquisa:
 
             cursor.execute("""
                 SELECT *
                 FROM exames
-                WHERE nome LIKE ?
+                WHERE nome LIKE %s
                 ORDER BY nome
-            """, (f"%{pesquisa}%",))
+            """, (
+                f"%{pesquisa}%",
+            ))
 
         else:
 
@@ -68,24 +68,26 @@ def registrar_rotas(app):
                 ORDER BY nome
             """)
 
+
         lista = cursor.fetchall()
 
         conexao.close()
+
 
         return render_template(
             "exames.html",
             exames=lista,
             pesquisa=pesquisa
         )
-        # ==================================================
-    # EDITAR EXAME
-    # ==================================================
+
+
 
     @app.route("/editar_exame/<int:id>", methods=["GET", "POST"])
     def editar_exame(id):
 
         conexao = conectar()
         cursor = conexao.cursor()
+
 
         if request.method == "POST":
 
@@ -100,13 +102,14 @@ def registrar_rotas(app):
 
             situacao = request.form["situacao"]
 
+
             cursor.execute("""
                 UPDATE exames
                 SET
-                    nome = ?,
-                    valor = ?,
-                    situacao = ?
-                WHERE id = ?
+                    nome=%s,
+                    valor=%s,
+                    situacao=%s
+                WHERE id=%s
             """, (
                 nome,
                 valor,
@@ -114,29 +117,36 @@ def registrar_rotas(app):
                 id
             ))
 
+
             conexao.commit()
 
             conexao.close()
 
             return redirect("/exames")
 
+
+
         cursor.execute("""
             SELECT *
             FROM exames
-            WHERE id = ?
-        """, (id,))
+            WHERE id=%s
+        """, (
+            id,
+        ))
+
 
         exame = cursor.fetchone()
 
+
         conexao.close()
+
 
         return render_template(
             "editar_exame.html",
             exame=exame
         )
-        # ==================================================
-    # EXCLUIR EXAME
-    # ==================================================
+
+
 
     @app.route("/excluir_exame/<int:id>")
     def excluir_exame(id):
@@ -144,30 +154,48 @@ def registrar_rotas(app):
         conexao = conectar()
         cursor = conexao.cursor()
 
-        # Verifica se o exame já foi utilizado
+
         cursor.execute("""
-            SELECT COUNT(*) AS total
+            SELECT COUNT(*)
             FROM atendimento_exames
-            WHERE exame_id = ?
-        """, (id,))
+            WHERE exame_id=%s
+        """, (
+            id,
+        ))
 
-        total = cursor.fetchone()["total"]
 
-        if total == 0:
+        total = cursor.fetchone()["count"]
 
-            cursor.execute("""
-                DELETE FROM exames
-                WHERE id = ?
-            """, (id,))
 
-            conexao.commit()
+        if total > 0:
+
+            conexao.close()
+
+            return """
+            <script>
+                alert('Não é possível excluir. Este exame já foi utilizado em atendimentos.');
+                window.location='/exames';
+            </script>
+            """
+
+
+
+        cursor.execute("""
+            DELETE FROM exames
+            WHERE id=%s
+        """, (
+            id,
+        ))
+
+
+        conexao.commit()
 
         conexao.close()
 
+
         return redirect("/exames")
-        # ==================================================
-    # ALTERAR SITUAÇÃO
-    # ==================================================
+
+
 
     @app.route("/alterar_situacao_exame/<int:id>")
     def alterar_situacao_exame(id):
@@ -175,32 +203,45 @@ def registrar_rotas(app):
         conexao = conectar()
         cursor = conexao.cursor()
 
+
         cursor.execute("""
             SELECT situacao
             FROM exames
-            WHERE id = ?
-        """, (id,))
+            WHERE id=%s
+        """, (
+            id,
+        ))
+
 
         exame = cursor.fetchone()
+
 
         if exame:
 
             if exame["situacao"] == "Ativo":
+
                 nova_situacao = "Inativo"
+
             else:
+
                 nova_situacao = "Ativo"
+
+
 
             cursor.execute("""
                 UPDATE exames
-                SET situacao = ?
-                WHERE id = ?
+                SET situacao=%s
+                WHERE id=%s
             """, (
                 nova_situacao,
                 id
             ))
 
+
             conexao.commit()
 
+
         conexao.close()
+
 
         return redirect("/exames")

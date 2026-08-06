@@ -8,10 +8,12 @@
 
     <form method="POST">
 
+
         <div class="row">
 
             <div class="col-md-3">
                 <label class="form-label">Data</label>
+
                 <input
                     type="date"
                     class="form-control"
@@ -19,8 +21,10 @@
                     value="{{ atendimento.data_atendimento }}">
             </div>
 
+
             <div class="col-md-5">
                 <label class="form-label">Colaborador</label>
+
                 <input
                     type="text"
                     class="form-control"
@@ -28,8 +32,10 @@
                     value="{{ atendimento.colaborador }}">
             </div>
 
+
             <div class="col-md-4">
                 <label class="form-label">Tipo de Atendimento</label>
+
                 <input
                     type="text"
                     class="form-control"
@@ -39,67 +45,169 @@
 
         </div>
 
-        <br>
-
-<div class="row">
-
-    <div class="col-md-6">
-        <label class="form-label">Credenciada</label>
-
-        <select
-            class="form-select"
-            name="credenciada">
-
-            {% for c in credenciadas %}
-            <option
-                value="{{ c.id }}"
-                {% if c.id == atendimento.credenciada_id %}selected{% endif %}>
-                {{ c.nome }}
-            </option>
-            {% endfor %}
-
-        </select>
-
-    </div>
-
-    <div class="col-md-6">
-
-<label class="form-label">Empresa</label>
-
-        <select
-            class="form-select"
-            name="empresa">
-
-            {% for e in empresas %}
-            <option
-                value="{{ e.id }}"
-                {% if e.id == atendimento.empresa_id %}selected{% endif %}>
-                {{ e.nome }}
-            </option>
-            {% endfor %}
-
-        </select>
-
-    </div>
-
-</div>
 
         <br>
+
+
+        <div class="row">
+
+            <div class="col-md-6">
+
+                <label class="form-label">
+                    Credenciada
+                </label>
+
+                <select
+                    class="form-select"
+                    name="credenciada">
+
+                    {% for c in credenciadas %}
+
+                    <option
+                        value="{{ c.id }}"
+                        {% if c.id == atendimento.credenciada_id %}
+                        selected
+                        {% endif %}>
+
+                        {{ c.nome }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+
+            <div class="col-md-6">
+
+                <label class="form-label">
+                    Empresa
+                </label>
+
+                <select
+                    class="form-select"
+                    name="empresa">
+
+
+                    {% for e in empresas %}
+
+                    <option
+                        value="{{ e.id }}"
+                        {% if e.id == atendimento.empresa_id %}
+                        selected
+                        {% endif %}>
+
+                        {{ e.nome }}
+
+                    </option>
+
+
+                    {% endfor %}
+
+
+                </select>
+
+            </div>
+
+
+        </div>
+
+
+        <br>
+
+
+        <div class="mb-3">
+
+            <label class="form-label">
+                Observações
+            </label>
+
+            <textarea
+                class="form-control"
+                name="observacoes"
+                rows="3">{{ atendimento.observacoes }}</textarea>
+
+        </div>
+
+
+
+        <hr>
+
+
+        <h5 class="mb-3">
+            Exames
+        </h5>
+
+
+        <div class="row">
+
+
+            {% for exame in exames %}
+
+            <div class="col-md-4">
+
+                <div class="form-check">
+
+
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="exames"
+                        value="{{ exame.id }}"
+
+                        {% if exame.id in exames_selecionados %}
+                            checked
+                        {% endif %}
+                    >
+
+
+                    <label class="form-check-label">
+
+                        {{ exame.nome }}
+
+                    </label>
+
+
+                </div>
+
+
+            </div>
+
+
+            {% endfor %}
+
+
+        </div>
+
+
+        <br>
+
 
         <button
             type="submit"
             class="btn btn-success">
+
             Salvar Alterações
+
         </button>
+
 
         <a
             href="/atendimentos"
             class="btn btn-secondary">
+
             Cancelar
+
         </a>
+
 
     </form>
 
+
 </div>
+
 
 {% endblock %}

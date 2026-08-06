@@ -18,9 +18,12 @@ def registrar_rotas(app):
             cursor.execute("""
                 SELECT id
                 FROM empresas
-                WHERE credenciada_id = ?
-                  AND UPPER(nome) = UPPER(?)
-            """, (credenciada_id, nome))
+                WHERE credenciada_id = %s
+                AND UPPER(nome) = UPPER(%s)
+            """, (
+                credenciada_id,
+                nome
+            ))
 
             if cursor.fetchone():
 
@@ -33,13 +36,14 @@ def registrar_rotas(app):
                 </script>
                 """
 
+
             cursor.execute("""
                 INSERT INTO empresas
                 (
                     credenciada_id,
                     nome
                 )
-                VALUES (?, ?)
+                VALUES (%s, %s)
             """, (
                 credenciada_id,
                 nome
@@ -49,9 +53,6 @@ def registrar_rotas(app):
 
             return redirect("/empresas")
 
-        # ==========================
-        # PESQUISA
-        # ==========================
 
         pesquisa = request.args.get("pesquisa", "")
 
@@ -62,27 +63,37 @@ def registrar_rotas(app):
                 empresas.credenciada_id,
                 credenciadas.nome AS credenciada
             FROM empresas
+
             INNER JOIN credenciadas
-                ON empresas.credenciada_id = credenciadas.id
+            ON empresas.credenciada_id = credenciadas.id
         """
 
         parametros = []
 
+
         if pesquisa:
 
             sql += """
-                WHERE empresas.nome LIKE ?
+                WHERE empresas.nome LIKE %s
             """
 
-            parametros.append(f"%{pesquisa}%")
+            parametros.append(
+                f"%{pesquisa}%"
+            )
+
 
         sql += """
             ORDER BY empresas.nome
         """
 
-        cursor.execute(sql, parametros)
+
+        cursor.execute(
+            sql,
+            parametros
+        )
 
         empresas = cursor.fetchall()
+
 
         cursor.execute("""
             SELECT
@@ -94,7 +105,9 @@ def registrar_rotas(app):
 
         credenciadas = cursor.fetchall()
 
+
         conexao.close()
+
 
         return render_template(
             "empresas.html",
@@ -102,39 +115,50 @@ def registrar_rotas(app):
             credenciadas=credenciadas,
             pesquisa=pesquisa
         )
-    
+
+
+
     @app.route("/editar_empresa/<int:id>", methods=["GET", "POST"])
     def editar_empresa(id):
 
         conexao = conectar()
         cursor = conexao.cursor()
 
+
         if request.method == "POST":
 
             cursor.execute("""
                 UPDATE empresas
                 SET
-                    credenciada_id = ?,
-                    nome = ?
-                WHERE id = ?
+                    credenciada_id = %s,
+                    nome = %s
+                WHERE id = %s
             """, (
                 request.form["credenciada_id"],
                 request.form["nome"],
                 id
             ))
 
+
             conexao.commit()
+
             conexao.close()
 
             return redirect("/empresas")
 
+
+
         cursor.execute("""
             SELECT *
             FROM empresas
-            WHERE id = ?
-        """, (id,))
+            WHERE id = %s
+        """, (
+            id,
+        ))
 
         empresa = cursor.fetchone()
+
+
 
         cursor.execute("""
             SELECT
@@ -146,7 +170,9 @@ def registrar_rotas(app):
 
         credenciadas = cursor.fetchall()
 
+
         conexao.close()
+
 
         return render_template(
             "editar_empresa.html",
@@ -155,20 +181,60 @@ def registrar_rotas(app):
         )
 
 
+
     @app.route("/excluir_empresa/<int:id>")
     def excluir_empresa(id):
 
         conexao = conectar()
         cursor = conexao.cursor()
 
-        cursor.execute("""
-            DELETE
-            FROM empresas
-            WHERE id = ?
-        """, (id,))
 
-        conexao.commit()
-        conexao.close()
+        try:
 
-        return redirect("/empresas")
-    
+            cursor.execute("""
+                SELECT COUNT(*)
+                FROM atendimentos
+                WHERE empresa_id = %s
+            """, (
+                id,
+            ))
+
+            qtd_atendimentos = cursor.fetchone()[0]
+
+
+            if qtd_atendimentos > 0:
+
+                conexao.close()
+
+                return """
+                <script>
+                    alert('Não é possível excluir. Esta empresa possui atendimentos cadastrados.');
+                    window.location='/empresas';
+                </script>
+                """
+
+
+
+            cursor.execute("""
+                DELETE FROM empresas
+                WHERE id = %s
+            """, (
+                id,
+            ))
+
+
+            conexao.commit()
+
+            conexao.close()
+
+
+            return redirect("/empresas")
+
+
+        except Exception as e:
+
+            conexao.rollback()
+
+            conexao.close()
+
+            return f"Erro ao excluir empresa: {e}"

@@ -24,7 +24,7 @@ def registrar_rotas(app):
                 credenciada_id,
                 nome
             )
-            VALUES (?, ?)
+            VALUES (%s, %s)
         """, (
             credenciada_id,
             nome
@@ -32,7 +32,8 @@ def registrar_rotas(app):
 
         conexao.commit()
 
-        novo_id = cursor.lastrowid
+        cursor.execute("SELECT LASTVAL() AS id")
+        novo_id = cursor.fetchone()["id"]
 
         conexao.close()
 
@@ -73,7 +74,7 @@ def registrar_rotas(app):
                 valor,
                 situacao
             )
-            VALUES (?, ?, ?)
+            VALUES (%s, %s, %s)
         """, (
             nome,
             valor,
@@ -82,7 +83,8 @@ def registrar_rotas(app):
 
         conexao.commit()
 
-        novo_id = cursor.lastrowid
+        cursor.execute("SELECT LASTVAL() AS id")
+        novo_id = cursor.fetchone()["id"]
 
         conexao.close()
 
@@ -136,7 +138,7 @@ def registrar_rotas(app):
                     situacao_financeira,
                     observacoes
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (
                 data_atendimento,
                 credenciada_id,
@@ -148,7 +150,8 @@ def registrar_rotas(app):
             ))
 
 
-            atendimento_id = cursor.lastrowid
+            cursor.execute("SELECT LASTVAL() AS id")
+            atendimento_id = cursor.fetchone()["id"]
 
 
             exames = request.form.getlist(
@@ -164,7 +167,7 @@ def registrar_rotas(app):
                         nome,
                         valor
                     FROM exames
-                    WHERE id = ?
+                    WHERE id = %s
                 """, (
                     exame_id,
                 ))
@@ -175,8 +178,8 @@ def registrar_rotas(app):
                 cursor.execute("""
                     SELECT valor
                     FROM precos_credenciada
-                    WHERE credenciada_id = ?
-                    AND exame_id = ?
+                    WHERE credenciada_id = %s
+                    AND exame_id = %s
                 """, (
                     credenciada_id,
                     exame_id
@@ -208,7 +211,7 @@ def registrar_rotas(app):
                         nome_exame,
                         valor_exame
                     )
-                    VALUES (?, ?, ?, ?)
+                    VALUES (%s, %s, %s, %s)
                 """, (
                     atendimento_id,
                     exame_id,
@@ -252,7 +255,7 @@ def registrar_rotas(app):
                 INNER JOIN empresas e
                     ON e.id = a.empresa_id
 
-                WHERE a.colaborador LIKE ?
+                WHERE a.colaborador LIKE %s
 
                 ORDER BY a.colaborador
             """, (
@@ -365,7 +368,7 @@ def registrar_rotas(app):
 
             FROM empresas
 
-            WHERE credenciada_id = ?
+            WHERE credenciada_id = %s
 
             ORDER BY nome
         """, (
@@ -387,7 +390,8 @@ def registrar_rotas(app):
 
             for empresa in empresas
         ])
-    # ==================================================
+
+        # ==================================================
     # EDITAR ATENDIMENTO
     # ==================================================
 
@@ -400,22 +404,17 @@ def registrar_rotas(app):
         conexao = conectar()
         cursor = conexao.cursor()
 
-
         if request.method == "POST":
 
             data_atendimento = request.form["data_atendimento"]
-
             credenciada_id = request.form["credenciada"]
-
             empresa_id = request.form["empresa"]
-
-            colaborador = request.form["colaborador"]
-
+            colaborador = request.form["colaborador"].strip()
             tipo_atendimento = request.form["tipo_atendimento"]
 
             situacao_financeira = request.form.get(
                 "situacao_financeira",
-                ""
+                "FATURAR"
             )
 
             observacoes = request.form.get(
@@ -423,21 +422,17 @@ def registrar_rotas(app):
                 ""
             )
 
-
             cursor.execute("""
                 UPDATE atendimentos
-
                 SET
-                    data_atendimento = ?,
-                    credenciada_id = ?,
-                    empresa_id = ?,
-                    colaborador = ?,
-                    tipo_atendimento = ?,
-                    situacao_financeira = ?,
-                    observacoes = ?
-
-                WHERE id = ?
-
+                    data_atendimento = %s,
+                    credenciada_id = %s,
+                    empresa_id = %s,
+                    colaborador = %s,
+                    tipo_atendimento = %s,
+                    situacao_financeira = %s,
+                    observacoes = %s
+                WHERE id = %s
             """, (
                 data_atendimento,
                 credenciada_id,
@@ -449,73 +444,54 @@ def registrar_rotas(app):
                 id
             ))
 
-
-            # Remove exames antigos
-
             cursor.execute("""
                 DELETE FROM atendimento_exames
+                WHERE atendimento_id = %s
+            """, (id,))
 
-                WHERE atendimento_id = ?
-
-            """, (
-                id,
-            ))
-
-
-            exames = request.form.getlist(
-                "exames"
-            )
-
+            exames = request.form.getlist("exames")
 
             for exame_id in exames:
 
                 cursor.execute("""
-                    SELECT nome
+                    SELECT
+                        nome,
+                        valor
                     FROM exames
-                    WHERE id = ?
-                """, (
-                    exame_id,
-                ))
+                    WHERE id = %s
+                """, (exame_id,))
 
                 exame = cursor.fetchone()
 
+                if not exame:
+                    continue
 
                 cursor.execute("""
                     SELECT valor
                     FROM precos_credenciada
-
-                    WHERE credenciada_id = ?
-                    AND exame_id = ?
-
+                    WHERE credenciada_id = %s
+                    AND exame_id = %s
                 """, (
                     credenciada_id,
                     exame_id
                 ))
 
-
                 preco = cursor.fetchone()
 
-
-                valor = 0
-
                 if preco:
-
                     valor = preco["valor"]
-
-
+                else:
+                    valor = exame["valor"]
 
                 cursor.execute("""
                     INSERT INTO atendimento_exames
-
                     (
                         atendimento_id,
                         exame_id,
                         nome_exame,
                         valor_exame
                     )
-
-                    VALUES (?, ?, ?, ?)
-
+                    VALUES (%s, %s, %s, %s)
                 """, (
                     id,
                     exame_id,
@@ -523,110 +499,66 @@ def registrar_rotas(app):
                     valor
                 ))
 
-
-
-            conexao.commit()
-
-            conexao.close()
-
-
-            return redirect(
-                "/atendimentos"
-            )
-
-
-
-        # Buscar atendimento
-
+                conexao.commit()
+                return redirect("/atendimentos")
+            
         cursor.execute("""
             SELECT *
-
             FROM atendimentos
-
-            WHERE id = ?
-
-        """, (
-            id,
-        ))
-
+            WHERE id = %s
+        """, (id,))
 
         atendimento = cursor.fetchone()
 
-
-
-        # Buscar exames selecionados
+        if not atendimento:
+            conexao.close()
+            return redirect("/atendimentos")
 
         cursor.execute("""
             SELECT exame_id
-
             FROM atendimento_exames
-
-            WHERE atendimento_id = ?
-
-        """, (
-            id,
-        ))
-
+            WHERE atendimento_id = %s
+        """, (id,))
 
         exames_selecionados = [
             item["exame_id"]
             for item in cursor.fetchall()
         ]
 
-
-
         cursor.execute("""
             SELECT
                 id,
                 nome
-
             FROM credenciadas
-
             ORDER BY nome
-
         """)
 
         credenciadas = cursor.fetchall()
 
-
-
         cursor.execute("""
             SELECT
                 id,
-                nome
-
+                nome,
+                valor
             FROM exames
-
+            WHERE situacao = 'Ativo'
             ORDER BY nome
-
         """)
 
         exames = cursor.fetchall()
 
-
-
         cursor.execute("""
             SELECT
                 id,
-                nome
-
+                nome,
+                credenciada_id
             FROM empresas
-
-            WHERE credenciada_id = ?
-
             ORDER BY nome
-
-        """, (
-            atendimento["credenciada_id"],
-        ))
+        """)
 
         empresas = cursor.fetchall()
 
-
-
         conexao.close()
-
-
 
         return render_template(
             "editar_atendimento.html",
@@ -636,6 +568,7 @@ def registrar_rotas(app):
             exames=exames,
             exames_selecionados=exames_selecionados
         )
+    
     # ==================================================
     # VISUALIZAR EXAMES DO ATENDIMENTO
     # ==================================================
@@ -656,7 +589,7 @@ def registrar_rotas(app):
 
             FROM atendimento_exames
 
-            WHERE atendimento_id = ?
+            WHERE atendimento_id = %s
 
             ORDER BY nome_exame
 
@@ -699,7 +632,7 @@ def registrar_rotas(app):
         cursor.execute("""
             DELETE FROM atendimento_exames
 
-            WHERE atendimento_id = ?
+            WHERE atendimento_id = %s
 
         """, (
             id,
@@ -710,7 +643,7 @@ def registrar_rotas(app):
         cursor.execute("""
             DELETE FROM atendimentos
 
-            WHERE id = ?
+            WHERE id = %s
 
         """, (
             id,

@@ -311,21 +311,39 @@
 
     <div class="mt-4">
 
-<a
-    href="/gerar_pdf?credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}"
-    class="btn btn-success">
+    <a
+        href="/gerar_pdf?tipo=Faturar&credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}"
+        class="btn btn-success">
 
-    📄 Gerar PDF
+        📄 PDF Faturar
 
-</a>
+    </a>
 
-<a
-    href="/gerar_excel?credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}"
-    class="btn btn-primary">
+    <a
+        href="/gerar_excel?tipo=Faturar&credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}"
+        class="btn btn-primary">
 
-    📊 Exportar Excel
+        📊 Excel Faturar
 
-</a>
+    </a>
+
+    <a
+        href="/gerar_pdf?tipo=Particular&credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}"
+        class="btn btn-secondary">
+
+        📄 PDF Particular
+
+    </a>
+
+    <a
+        href="/gerar_excel?tipo=Particular&credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}"
+        class="btn btn-dark">
+
+        📊 Excel Particular
+
+    </a>
+
+</div>
 
 <div class="card mt-4">
 

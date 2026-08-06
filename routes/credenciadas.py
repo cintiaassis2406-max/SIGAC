@@ -10,10 +10,6 @@ def registrar_rotas(app):
         conexao = conectar()
         cursor = conexao.cursor()
 
-        # ==========================
-        # CADASTRAR
-        # ==========================
-
         if request.method == "POST":
 
             nome = request.form["nome"]
@@ -34,11 +30,13 @@ def registrar_rotas(app):
                 </script>
                 """
 
+
             email = request.form["email"]
             telefone = request.form["telefone"]
             contato = request.form["contato"]
             observacoes = request.form["observacoes"]
             observacoes_internas = request.form["observacoes_internas"]
+
 
             cursor.execute("""
                 INSERT INTO credenciadas
@@ -53,24 +51,23 @@ def registrar_rotas(app):
                 )
                 VALUES (%s,%s,%s,%s,%s,%s,%s)
             """, (
-               nome,
-               email,
-               telefone,
-               contato,
-               observacoes,
-               observacoes_internas,
-               None
+                nome,
+                email,
+                telefone,
+                contato,
+                observacoes,
+                observacoes_internas,
+                None
             ))
+
 
             conexao.commit()
 
             return redirect("/credenciadas")
 
-        # ==========================
-        # PESQUISA
-        # ==========================
 
         pesquisa = request.args.get("pesquisa", "")
+
 
         if pesquisa:
 
@@ -79,7 +76,9 @@ def registrar_rotas(app):
                 FROM credenciadas
                 WHERE nome LIKE %s
                 ORDER BY nome
-            """, (f"%{pesquisa}%",))
+            """, (
+                f"%{pesquisa}%",
+            ))
 
         else:
 
@@ -89,9 +88,11 @@ def registrar_rotas(app):
                 ORDER BY nome
             """)
 
+
         lista = cursor.fetchall()
 
         conexao.close()
+
 
         return render_template(
             "credenciadas.html",
@@ -99,13 +100,17 @@ def registrar_rotas(app):
             pesquisa=pesquisa
         )
 
+
+
     @app.route("/nova_credenciada", methods=["POST"])
     def nova_credenciada():
 
         conexao = conectar()
         cursor = conexao.cursor()
 
+
         nome = request.form.get("nome")
+
 
         if not nome:
 
@@ -115,13 +120,19 @@ def registrar_rotas(app):
                 "erro": "Informe o nome."
             }), 400
 
+
+
         cursor.execute("""
             SELECT id
             FROM credenciadas
             WHERE UPPER(nome)=UPPER(%s)
-        """, (nome,))
+        """, (
+            nome,
+        ))
+
 
         existente = cursor.fetchone()
+
 
         if existente:
 
@@ -131,6 +142,8 @@ def registrar_rotas(app):
                 "id": existente["id"],
                 "nome": nome
             })
+
+
 
         cursor.execute("""
             INSERT INTO credenciadas
@@ -154,16 +167,33 @@ def registrar_rotas(app):
             None
         ))
 
+
         conexao.commit()
 
-        novo_id = cursor.lastrowid
+
+        cursor.execute("""
+            SELECT id
+            FROM credenciadas
+            WHERE nome=%s
+            ORDER BY id DESC
+            LIMIT 1
+        """, (
+            nome,
+        ))
+
+
+        novo_id = cursor.fetchone()["id"]
+
 
         conexao.close()
+
 
         return jsonify({
             "id": novo_id,
             "nome": nome
         })
+
+
 
     @app.route("/excluir_credenciada/<int:id>")
     def excluir_credenciada(id):
@@ -171,15 +201,20 @@ def registrar_rotas(app):
         conexao = conectar()
         cursor = conexao.cursor()
 
+
         cursor.execute(
             "DELETE FROM credenciadas WHERE id=%s",
             (id,)
         )
 
+
         conexao.commit()
+
         conexao.close()
 
+
         return redirect("/credenciadas")
+
 
 
     @app.route("/editar_credenciada/<int:id>", methods=["GET", "POST"])
@@ -188,43 +223,52 @@ def registrar_rotas(app):
         conexao = conectar()
         cursor = conexao.cursor()
 
+
         if request.method == "POST":
 
             cursor.execute("""
-               UPDATE credenciadas
-               SET
-                   nome=%s,
-                   email=%s,
-                   telefone=%s,
-                   contato=%s,
-                   observacoes=%s,
-                   observacoes_internas=%s,
-                   situacao_financeira=%s
-               WHERE id=%s
+                UPDATE credenciadas
+                SET
+                    nome=%s,
+                    email=%s,
+                    telefone=%s,
+                    contato=%s,
+                    observacoes=%s,
+                    observacoes_internas=%s,
+                    situacao_financeira=%s
+                WHERE id=%s
             """, (
-                   request.form["nome"],
-                   request.form["email"],
-                   request.form["telefone"],
-                   request.form["contato"],
-                   request.form["observacoes"],
-                   request.form["observacoes_internas"],
-                   request.form["situacao_financeira"],
-                   id
-                ))
+                request.form["nome"],
+                request.form["email"],
+                request.form["telefone"],
+                request.form["contato"],
+                request.form["observacoes"],
+                request.form["observacoes_internas"],
+                request.form["situacao_financeira"],
+                id
+            ))
+
 
             conexao.commit()
+
             conexao.close()
 
+
             return redirect("/credenciadas")
+
+
 
         cursor.execute(
             "SELECT * FROM credenciadas WHERE id=%s",
             (id,)
         )
 
+
         credenciada = cursor.fetchone()
 
+
         conexao.close()
+
 
         return render_template(
             "editar_credenciada.html",
