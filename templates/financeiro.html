@@ -309,39 +309,70 @@
 
     </div>
 
-    <div class="mt-4">
+    <div class="card mt-4">
 
-    <a
-        href="/gerar_pdf?tipo=Faturar&credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}"
-        class="btn btn-success">
+    <div class="card-header">
+        <strong>Gerar Relatório</strong>
+    </div>
 
-        📄 PDF Faturar
+    <div class="card-body">
 
-    </a>
+        <form method="GET">
 
-    <a
-        href="/gerar_excel?tipo=Faturar&credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}"
-        class="btn btn-primary">
+            <input type="hidden" name="credenciada" value="{{ credenciada_id }}">
+            <input type="hidden" name="mes" value="{{ mes }}">
+            <input type="hidden" name="ano" value="{{ ano }}">
 
-        📊 Excel Faturar
+            <div class="row">
 
-    </a>
+                <div class="col-md-4">
 
-    <a
-        href="/gerar_pdf?tipo=Particular&credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}"
-        class="btn btn-secondary">
+                    <label class="form-label">
+                        Tipo de Relatório
+                    </label>
 
-        📄 PDF Particular
+                    <select
+                        name="tipo"
+                        class="form-select">
 
-    </a>
+                        <option value="Faturar">
+                            Faturar
+                        </option>
 
-    <a
-        href="/gerar_excel?tipo=Particular&credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}"
-        class="btn btn-dark">
+                        <option value="Particular">
+                            Particular
+                        </option>
 
-        📊 Excel Particular
+                    </select>
 
-    </a>
+                </div>
+
+                <div class="col-md-4 d-flex align-items-end">
+
+                    <a
+                        href="/gerar_pdf?tipo={{ tipo }}&credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}"
+                        class="btn btn-success me-2">
+
+                        📄 Gerar PDF
+
+                    </a>
+
+
+                    <a
+                        href="/gerar_excel?tipo={{ tipo }}&credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}"
+                        class="btn btn-primary">
+
+                        📊 Gerar Excel
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
 
 </div>
 
@@ -353,35 +384,43 @@
 
     </div>
 
-<a
-    href="/alterar_status_faturamento?credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}&status=Enviado para Conferência da Credenciada"
-    class="btn btn-primary">
+    <div class="card-body">
 
-    📤 Enviar para Conferência da Credenciada
+        <div class="alert alert-info">
 
-</a>
+            <strong>Status Atual:</strong>
+
+            {{ status_faturamento }}
+
+        </div>
+
+        <a
+            href="/alterar_status_faturamento?credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}&status=Enviado para Conferência da Credenciada"
+            class="btn btn-primary">
 
             📤 Enviar para Conferência da Credenciada
 
-        </button>
+        </a>
 
-<a
-    href="/alterar_status_faturamento?credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}&status=Faturamento Fechado"
-    class="btn btn-success">
+        <a
+            href="/alterar_status_faturamento?credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}&status=Reaberto para Correção"
+            class="btn btn-warning">
 
-    ⚫ Fechar Faturamento
+            ✏️ Reabrir para Correção
 
-</a>
+        </a>
 
-            ⚫ Fechar Faturamento
+        <a
+            href="/alterar_status_faturamento?credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}&status=Faturamento Fechado"
+            class="btn btn-success">
 
-        </button>
+            ✅ Fechar Faturamento
+
+        </a>
 
     </div>
 
 </div>
-
-    </div>
 
 </div>
 

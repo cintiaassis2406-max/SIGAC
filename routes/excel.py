@@ -80,7 +80,7 @@ def registrar_rotas(app):
         if tipo:
 
             sql += """
-                AND a.tipo_atendimento = %s
+                AND a.situacao_atendimento = %s
             """
 
             parametros.append(tipo)
