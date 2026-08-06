@@ -111,6 +111,20 @@ def registrar_rotas(app):
 
         ws.title = "Faturamento"
 
+        ws.append([
+            "SIGAC - RELATÓRIO DE FATURAMENTO"
+        ])
+
+        ws.append([
+            f"Credenciada: {nome_credenciada}"
+        ])
+
+        ws.append([
+            f"Período: {mes}/{ano}"
+        ])
+
+        ws.append([])
+
 
         ws.append([
             "Colaborador",
@@ -122,7 +136,7 @@ def registrar_rotas(app):
         ])
 
 
-        for celula in ws[1]:
+        for celula in ws[5]:
 
             celula.font = Font(
                 bold=True

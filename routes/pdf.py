@@ -28,6 +28,25 @@ def registrar_rotas(app):
         ano = request.args.get("ano")
         tipo = request.args.get("tipo")
 
+        nome_credenciada = ""
+
+        if credenciada_id:
+
+            cursor.execute(
+                """
+                SELECT nome
+                FROM credenciadas
+                WHERE id = %s
+                """,
+                (credenciada_id,)
+            )
+
+            cred = cursor.fetchone()
+
+            if cred:
+
+                nome_credenciada = cred["nome"]
+
 
         sql = """
             SELECT
@@ -131,12 +150,16 @@ def registrar_rotas(app):
 
         elementos.append(
 
-            Paragraph(
-                "<b>SIGAC - RELATÓRIO DE FATURAMENTO</b>",
-                estilos["Title"]
-            )
+    Paragraph(
+        f"""
+        <b>SIGAC - RELATÓRIO DE FATURAMENTO</b><br/>
+        Credenciada: {nome_credenciada}<br/>
+        Período: {mes}/{ano}<br/>
+        """,
+        estilos["Title"]
+    )
 
-        )
+)
 
 
         tabela = [
