@@ -111,23 +111,76 @@
 
 <h3>SIGAC</h3>
 
-<a href="/dashboard">🏠 Dashboard</a>
+{% if tem_permissao("dashboard") %}
+<a href="/dashboard">
+    🏠 Dashboard
+</a>
+{% endif %}
 
-<a href="/atendimentos">👥 Atendimentos</a>
 
-<a href="/credenciadas">🏥 Credenciadas</a>
+{% if tem_permissao("atendimentos") %}
+<a href="/atendimentos">
+    👥 Atendimentos
+</a>
+{% endif %}
 
-<a href="/empresas">🏢 Empresas</a>
 
-<a href="/exames">🧪 Exames</a>
+{% if tem_permissao("credenciadas") %}
+<a href="/credenciadas">
+    🏥 Credenciadas
+</a>
+{% endif %}
 
-<a href="/tabela_precos">💲 Tabela de Preços</a>
 
-<a href="/financeiro">💰 Financeiro</a>
+{% if tem_permissao("empresas") %}
+<a href="/empresas">
+    🏢 Empresas
+</a>
+{% endif %}
 
-<a href="/relatorios">📊 Relatórios</a>
 
-<a href="/usuarios">👤 Usuários</a>
+{% if tem_permissao("exames") %}
+<a href="/exames">
+    🧪 Exames
+</a>
+{% endif %}
+
+
+{% if tem_permissao("tabela_precos") %}
+<a href="/tabela_precos">
+    💲 Tabela de Preços
+</a>
+{% endif %}
+
+
+{% if tem_permissao("financeiro") %}
+<a href="/financeiro">
+    💰 Financeiro
+</a>
+{% endif %}
+
+
+{% if tem_permissao("relatorios") %}
+<a href="/relatorios">
+    📊 Relatórios
+</a>
+{% endif %}
+
+
+{% if tem_permissao("usuarios") %}
+<a href="/usuarios">
+    👤 Usuários
+</a>
+{% endif %}
+
+
+{% if tem_permissao("permissoes") %}
+
+<a href="/permissoes">
+    🔐 Permissões
+</a>
+
+{% endif %}
 
 <div class="mt-5">
 

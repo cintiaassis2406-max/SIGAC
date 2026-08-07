@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block conteudo %}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">
+        Pendências
+    </h2>
+
+
+    {% if pendencias %}
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <table class="table table-bordered table-hover">
+
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Descrição</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+
+
+                <tbody>
+
+                    {% for item in pendencias %}
+
+                    <tr>
+
+                        <td>
+                            {{ item.tipo }}
+                        </td>
+
+                        <td>
+                            {{ item.descricao }}
+                        </td>
+
+                        <td>
+                            {{ item.data }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    {% else %}
+
+    <div class="alert alert-success">
+
+        Nenhuma pendência encontrada.
+
+    </div>
+
+    {% endif %}
+
+
+</div>
+
+{% endblock %}

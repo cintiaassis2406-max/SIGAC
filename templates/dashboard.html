@@ -32,14 +32,21 @@
     </div>
 
     <div class="col-md-3 mb-4">
+    <a href="/pendencias" class="text-decoration-none">
         <div class="card shadow-sm">
             <div class="card-body">
                 <h6 class="text-muted">Pendências</h6>
-<h2>{{ total_exames }}</h2>
+
+                <h3>
+                    {{ pendencias }}
+                </h3>
+
+                <small class="text-muted">
+                    Clique para visualizar
+                </small>
             </div>
         </div>
-    </div>
-
+    </a>
 </div>
 
 <div class="card shadow-sm mb-4">
@@ -91,7 +98,9 @@
 
     <tr>
 
-        <td>{{ atendimento.data_atendimento }}</td>
+        <td>
+            {{ atendimento.data_atendimento.strftime('%d/%m/%Y') if atendimento.data_atendimento else '' }}
+       </td>
         <td>{{ atendimento.credenciada }}</td>
         <td>{{ atendimento.empresa }}</td>
         <td>{{ atendimento.colaborador }}</td>

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block conteudo %}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">
+        🔐 Controle de Permissões
+    </h2>
+
+
+    <table class="table table-bordered table-striped">
+
+        <thead class="table-dark">
+
+            <tr>
+                <th>Perfil</th>
+                <th>Módulo</th>
+                <th>Visualizar</th>
+                <th>Criar</th>
+                <th>Editar</th>
+                <th>Excluir</th>
+                <th>Ação</th>
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {% for p in permissoes %}
+
+            <tr>
+
+                <form method="POST">
+
+                    <input type="hidden" name="id" value="{{ p.id }}">
+
+
+                    <td>
+                        {{ p.perfil }}
+                    </td>
+
+
+                    <td>
+                        {{ p.modulo }}
+                    </td>
+
+
+                    <td class="text-center">
+                        <input 
+                            type="checkbox" 
+                            name="visualizar"
+                            {% if p.visualizar %}checked{% endif %}
+                        >
+                    </td>
+
+
+                    <td class="text-center">
+                        <input 
+                            type="checkbox" 
+                            name="criar"
+                            {% if p.criar %}checked{% endif %}
+                        >
+                    </td>
+
+
+                    <td class="text-center">
+                        <input 
+                            type="checkbox" 
+                            name="editar"
+                            {% if p.editar %}checked{% endif %}
+                        >
+                    </td>
+
+
+                    <td class="text-center">
+                        <input 
+                            type="checkbox" 
+                            name="excluir"
+                            {% if p.excluir %}checked{% endif %}
+                        >
+                    </td>
+
+
+                    <td>
+                        <button class="btn btn-success btn-sm">
+                            Salvar
+                        </button>
+                    </td>
+
+
+                </form>
+
+            </tr>
+
+
+            {% endfor %}
+
+
+        </tbody>
+
+
+    </table>
+
+
+</div>
+
+
+{% endblock %}

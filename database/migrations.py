@@ -129,6 +129,86 @@ def executar_migrations():
             1
         ))
 
+    # ==========================================
+    # CRIA TABELA DE PERMISSOES
+    # ==========================================
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS permissoes (
+
+            id SERIAL PRIMARY KEY,
+
+            perfil TEXT NOT NULL,
+
+            modulo TEXT NOT NULL,
+
+            visualizar INTEGER DEFAULT 0,
+
+            criar INTEGER DEFAULT 0,
+
+            editar INTEGER DEFAULT 0,
+
+            excluir INTEGER DEFAULT 0
+
+        )
+    """)
+
+
+    # ==========================================
+    # CRIA PERMISSOES PADRAO
+    # ==========================================
+
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM permissoes
+    """)
+
+    resultado = cursor.fetchone()
+
+
+    if resultado["total"] == 0:
+
+
+        permissoes = [
+
+            ("Recepção", "dashboard", 1, 0, 0, 0),
+            ("Recepção", "atendimentos", 1, 1, 1, 0),
+            ("Recepção", "credenciadas", 1, 0, 0, 0),
+            ("Recepção", "empresas", 1, 0, 0, 0),
+            ("Recepção", "exames", 1, 0, 0, 0),
+
+
+            ("Financeiro", "dashboard", 1, 0, 0, 0),
+            ("Financeiro", "atendimentos", 1, 0, 0, 0),
+            ("Financeiro", "financeiro", 1, 1, 1, 0),
+            ("Financeiro", "relatorios", 1, 0, 0, 0),
+
+
+            ("Administrador", "dashboard", 1, 1, 1, 1),
+            ("Administrador", "credenciadas", 1, 1, 1, 1),
+            ("Administrador", "empresas", 1, 1, 1, 1),
+            ("Administrador", "exames", 1, 1, 1, 1),
+            ("Administrador", "atendimentos", 1, 1, 1, 1),
+            ("Administrador", "financeiro", 1, 1, 1, 1),
+            ("Administrador", "relatorios", 1, 1, 1, 1),
+            ("Administrador", "usuarios", 1, 1, 1, 1),
+            ("Administrador", "tabela_precos", 1, 1, 1, 1)
+
+        ]
+
+
+        cursor.executemany("""
+            INSERT INTO permissoes
+            (
+                perfil,
+                modulo,
+                visualizar,
+                criar,
+                editar,
+                excluir
+            )
+            VALUES (%s,%s,%s,%s,%s,%s)
+        """, permissoes)
+        
     conexao.commit()
     conexao.close()

@@ -1,6 +1,7 @@
-from flask import render_template, request, redirect
+from flask import render_template, request, redirect, session
 from database.database import conectar
 from datetime import datetime
+from utils.decoradores import exige_permissao
 
 def registrar_rotas(app):
         
@@ -54,6 +55,7 @@ def registrar_rotas(app):
         )
 
     @app.route("/financeiro")
+    @exige_permissao("financeiro")
     def financeiro():
 
         conexao = conectar()
