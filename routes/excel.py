@@ -20,6 +20,22 @@ def registrar_rotas(app):
         ano = request.args.get("ano")
         tipo = request.args.get("tipo")
 
+        nome_credenciada = ""
+
+        if credenciada_id:
+           
+           cursor.execute("""
+            SELECT nome
+            FROM credenciadas
+            WHERE id = %s
+        """, (credenciada_id,))
+
+        resultado_credenciada = cursor.fetchone()
+
+        if resultado_credenciada:
+            nome_credenciada = resultado_credenciada["nome"]
+
+
 
         sql = """
             SELECT
@@ -154,7 +170,11 @@ def registrar_rotas(app):
 
                 item["empresa"],
 
-                item["data_atendimento"].strftime("%d/%m/%Y") if item["data_atendimento"] else "",
+                item["data_atendimento"].strftime("%d/%m/%Y")
+                if hasattr(item["data_atendimento"], "strftime")
+                else str(item["data_atendimento"])
+                if item["data_atendimento"]
+                else "",
 
                 item["tipo_atendimento"],
 
