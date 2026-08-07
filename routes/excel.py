@@ -154,7 +154,7 @@ def registrar_rotas(app):
 
                 item["empresa"],
 
-                item["data_atendimento"],
+                item["data_atendimento"].strftime("%d/%m/%Y") if item["data_atendimento"] else "",
 
                 item["tipo_atendimento"],
 
