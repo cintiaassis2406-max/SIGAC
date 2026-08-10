@@ -27,24 +27,26 @@ def registrar_rotas(app):
 
                 if campo.startswith("valor_"):
 
-                    exame_id = campo.replace("valor_", "")
-                    valor = request.form[campo]
+                   exame_id = campo.replace("valor_", "")
+                   valor = request.form[campo]
 
-                    if valor != "":
+                   if valor != "":
+                      valor = valor.replace(",", ".")
+                      valor = float(valor)
 
-                        cursor.execute("""
-                            INSERT INTO precos_credenciada
-                            (
-                                credenciada_id,
-                                exame_id,
-                                valor
-                            )
-                            VALUES (%s, %s, %s)
-                        """, (
-                            credenciada_id,
-                            exame_id,
-                            valor
-                        ))
+                      cursor.execute("""
+                          INSERT INTO precos_credenciada
+                          (
+                              credenciada_id,
+                              exame_id,
+                              valor
+                          )
+                          VALUES (%s, %s, %s)
+                      """, (
+                          credenciada_id,
+                          exame_id,
+                          valor
+                      ))
 
             conexao.commit()
 
