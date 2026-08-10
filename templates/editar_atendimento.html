@@ -44,7 +44,43 @@
             </div>
 
         </div>
+    <br>
 
+    <div class="row">
+
+        <div class="col-md-6">
+
+            <label class="form-label">
+                Situação do Atendimento
+            </label>
+
+            <select
+                class="form-select"
+                name="situacao_financeira">
+
+                <option
+                    value="FATURAR"
+                    {% if atendimento.situacao_financeira == "FATURAR" %}
+                    selected
+                    {% endif %}>
+                    Faturar
+                </option>
+
+                <option
+                    value="PARTICULAR"
+                    {% if atendimento.situacao_financeira == "PARTICULAR" %}
+                    selected
+                    {% endif %}>
+                    Particular
+                </option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+    <br>
 
         <br>
 
