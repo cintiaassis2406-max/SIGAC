@@ -274,26 +274,38 @@
 
     <div class="col-md-10">
 
-        <input
-            type="text"
-            name="pesquisa"
-            class="form-control"
-            placeholder="Pesquisar por colaborador, empresa ou credenciada..."
-            value="{{ pesquisa }}">
+        <div class="col-md-7">
 
-    </div>
+    <input
+        type="text"
+        name="pesquisa"
+        class="form-control"
+        placeholder="Pesquisar por colaborador, empresa ou credenciada..."
+        value="{{ pesquisa }}">
 
-    <div class="col-md-2 d-grid">
+</div>
 
-        <button
-            type="submit"
-            class="btn btn-primary">
+<div class="col-md-3">
 
-            🔎 Pesquisar
+    <input
+        type="date"
+        name="data_pesquisa"
+        class="form-control"
+        value="{{ data_pesquisa }}">
 
-        </button>
+</div>
 
-    </div>
+<div class="col-md-2 d-grid">
+
+    <button
+        type="submit"
+        class="btn btn-primary">
+
+        🔎 Pesquisar
+
+    </button>
+
+</div>
 
 </form>
 
@@ -374,6 +386,71 @@
         </table>
 
     </div>
+    <div class="d-flex justify-content-between align-items-center mt-3">
+
+    <div>
+
+        {% if total > 0 %}
+
+            Mostrando
+            {{ ((pagina - 1) * 10) + 1 }}
+            -
+            {{ [pagina * 10, total] | min }}
+            de
+            {{ total }}
+            atendimentos
+
+        {% else %}
+
+            Nenhum atendimento
+
+        {% endif %}
+
+    </div>
+
+    <div>
+
+        {% if pagina > 1 %}
+
+            <a
+                href="?pagina={{ pagina - 1 }}&pesquisa={{ pesquisa }}&data_pesquisa={{ data_pesquisa }}"
+                class="btn btn-outline-primary btn-sm">
+
+                ← Anterior
+
+            </a>
+
+        {% endif %}
+
+
+        {% for numero in range(1, total_paginas + 1) %}
+
+            <a
+                href="?pagina={{ numero }}&pesquisa={{ pesquisa }}&data_pesquisa={{ data_pesquisa }}"
+                class="btn {% if numero == pagina %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+
+                {{ numero }}
+
+            </a>
+
+        {% endfor %}
+
+
+        {% if pagina < total_paginas %}
+
+            <a
+                href="?pagina={{ pagina + 1 }}&pesquisa={{ pesquisa }}&data_pesquisa={{ data_pesquisa }}"
+                class="btn btn-outline-primary btn-sm">
+
+                Próxima →
+
+            </a>
+
+        {% endif %}
+
+    </div>
+
+</div>
     <!-- Modal Nova Credenciada -->
 
 <div class="modal fade" id="modalCredenciada" tabindex="-1">

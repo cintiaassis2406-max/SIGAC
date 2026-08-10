@@ -226,68 +226,125 @@ def registrar_rotas(app):
 
             return redirect("/atendimentos")
 
-        # ==================================================
-        # FILTROS / LISTAGEM
-        # ==================================================
+            # ==================================================
+    # FILTROS / LISTAGEM
+    # ==================================================
 
-        pesquisa = request.args.get(
-            "pesquisa",
-            ""
-        )
+    pesquisa = request.args.get(
+        "pesquisa",
+        ""
+    ).strip()
 
-        if pesquisa:
+    data_pesquisa = request.args.get(
+        "data_pesquisa",
+        ""
+    ).strip()
 
-            cursor.execute("""
-                SELECT
-                    a.id,
-                    a.data_atendimento,
-                    c.nome AS credenciada,
-                    e.nome AS empresa,
-                    a.colaborador,
-                    a.tipo_atendimento,
-                    a.situacao_financeira
+    pagina = request.args.get(
+        "pagina",
+        1,
+        type=int
+    )
 
-                FROM atendimentos a
+    if pagina < 1:
+        pagina = 1
 
-                INNER JOIN credenciadas c
-                    ON c.id = a.credenciada_id
+    por_pagina = 10
 
-                INNER JOIN empresas e
-                    ON e.id = a.empresa_id
+    offset = (pagina - 1) * por_pagina
 
-                WHERE a.colaborador LIKE %s
+    # ==================================================
+    # CONTAR ATENDIMENTOS
+    # ==================================================
 
-                ORDER BY a.colaborador
-            """, (
-                f"%{pesquisa}%",
-            ))
+    filtros = []
+    parametros = []
 
-        else:
+    if pesquisa:
 
-            cursor.execute("""
-                SELECT
-                    a.id,
-                    a.data_atendimento,
-                    c.nome AS credenciada,
-                    e.nome AS empresa,
-                    a.colaborador,
-                    a.tipo_atendimento,
-                    a.situacao_financeira
+        filtros.append("""
+            (
+                a.colaborador ILIKE %s
+                OR e.nome ILIKE %s
+                OR c.nome ILIKE %s
+            )
+        """)
 
-                FROM atendimentos a
+        termo = f"%{pesquisa}%"
 
-                INNER JOIN credenciadas c
-                    ON c.id = a.credenciada_id
+        parametros.extend([
+            termo,
+            termo,
+            termo
+        ])
 
-                INNER JOIN empresas e
-                    ON e.id = a.empresa_id
+    if data_pesquisa:
 
-                ORDER BY
-                    a.colaborador
-            """)
+        filtros.append("""
+            a.data_atendimento = %s
+        """)
 
+        parametros.append(data_pesquisa)
 
-        lista = cursor.fetchall()
+    where = ""
+
+    if filtros:
+
+        where = "WHERE " + " AND ".join(filtros)
+
+    cursor.execute(f"""
+        SELECT
+            COUNT(*) AS total
+
+        FROM atendimentos a
+
+        INNER JOIN credenciadas c
+            ON c.id = a.credenciada_id
+
+        INNER JOIN empresas e
+            ON e.id = a.empresa_id
+
+        {where}
+    """, parametros)
+
+    total = cursor.fetchone()["total"]
+
+    total_paginas = (total + por_pagina - 1) // por_pagina
+
+    # ==================================================
+    # LISTAR ATENDIMENTOS
+    # ==================================================
+
+    cursor.execute(f"""
+        SELECT
+            a.id,
+            a.data_atendimento,
+            c.nome AS credenciada,
+            e.nome AS empresa,
+            a.colaborador,
+            a.tipo_atendimento,
+            a.situacao_financeira
+
+        FROM atendimentos a
+
+        INNER JOIN credenciadas c
+            ON c.id = a.credenciada_id
+
+        INNER JOIN empresas e
+            ON e.id = a.empresa_id
+
+        {where}
+
+        ORDER BY a.id DESC
+
+        LIMIT %s
+        OFFSET %s
+    """, parametros + [
+        por_pagina,
+        offset
+    ])
+
+    lista = cursor.fetchall()
 
 
         # ==================================================
@@ -343,6 +400,10 @@ def registrar_rotas(app):
             empresas=empresas,
             exames=exames,
             pesquisa=pesquisa,
+            data_pesquisa=data_pesquisa,
+            pagina=pagina,
+            total=total,
+            total_paginas=total_paginas,
             data_hoje=date.today().strftime("%Y-%m-%d")
         )
 
