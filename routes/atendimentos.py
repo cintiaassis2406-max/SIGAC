@@ -311,7 +311,7 @@ def registrar_rotas(app):
 
     total_paginas = (total + por_pagina - 1) // por_pagina
 
-    # ==================================================
+        # ==================================================
     # LISTAR ATENDIMENTOS
     # ==================================================
 
@@ -347,11 +347,11 @@ def registrar_rotas(app):
     lista = cursor.fetchall()
 
 
-        # ==================================================
-        # DADOS PARA CADASTRO
-        # ==================================================
+    # ==================================================
+    # DADOS PARA CADASTRO
+    # ==================================================
 
-        cursor.execute("""
+    cursor.execute("""
             SELECT
                 id,
                 nome
@@ -361,11 +361,11 @@ def registrar_rotas(app):
             ORDER BY nome
         """)
 
-        credenciadas = cursor.fetchall()
+    credenciadas = cursor.fetchall()
 
 
 
-        cursor.execute("""
+    cursor.execute("""
             SELECT
                 id,
                 nome
@@ -377,9 +377,9 @@ def registrar_rotas(app):
             ORDER BY nome
         """)
 
-        exames = cursor.fetchall()
+    exames = cursor.fetchall()
 
-        cursor.execute("""
+    cursor.execute("""
             SELECT
                 id,
                 nome,
@@ -388,12 +388,12 @@ def registrar_rotas(app):
             ORDER BY nome
         """)
 
-        empresas = cursor.fetchall()
+    empresas = cursor.fetchall()
 
-        conexao.close()
+    conexao.close()
 
 
-        return render_template(
+    return render_template(
             "atendimentos.html",
             atendimentos=lista,
             credenciadas=credenciadas,
