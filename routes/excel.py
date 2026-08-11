@@ -5,6 +5,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 
 import tempfile
+import re
 
 
 def registrar_rotas(app):
@@ -650,12 +651,22 @@ def registrar_rotas(app):
 
         conexao.close()
 
+        nome_arquivo = (
+            f"{nome_credenciada} - "
+            f"{mes or 'Todos'}-{ano or ''} - "
+            f"{tipo or 'Faturar'}.xlsx"
+        )
+
+        nome_arquivo = re.sub(
+            r'[\\/:\*?"<>|]',
+            '',
+            nome_arquivo
+        )
+
         return send_file(
             arquivo.name,
             as_attachment=True,
-            download_name=(
-                "Relatorio_Faturamento.xlsx"
-            ),
+            download_name=nome_arquivo,
             mimetype=(
                 "application/vnd.openxmlformats-officedocument."
                 "spreadsheetml.sheet"

@@ -14,6 +14,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 
 import tempfile
+import re
 
 
 def registrar_rotas(app):
@@ -29,7 +30,16 @@ def registrar_rotas(app):
         ano = request.args.get("ano")
         tipo = request.args.get("tipo")
 
+        situacao_financeira = request.args.get(
+            "situacao_financeira",
+            ""
+        )
+
         nome_credenciada = ""
+
+        # ==================================================
+        # NOME DA CREDENCIADA
+        # ==================================================
 
         if credenciada_id:
 
@@ -45,6 +55,7 @@ def registrar_rotas(app):
             cred = cursor.fetchone()
 
             if cred:
+
                 nome_credenciada = cred["nome"]
 
 
@@ -75,6 +86,8 @@ def registrar_rotas(app):
         parametros = []
 
 
+        # FILTRO CREDENCIADA
+
         if credenciada_id:
 
             sql += """
@@ -85,6 +98,8 @@ def registrar_rotas(app):
                 credenciada_id
             )
 
+
+        # FILTRO MÊS
 
         if mes:
 
@@ -100,6 +115,8 @@ def registrar_rotas(app):
             )
 
 
+        # FILTRO ANO
+
         if ano:
 
             sql += """
@@ -114,6 +131,8 @@ def registrar_rotas(app):
             )
 
 
+        # FILTRO TIPO
+
         if tipo:
 
             sql += """
@@ -122,6 +141,19 @@ def registrar_rotas(app):
 
             parametros.append(
                 tipo
+            )
+
+
+        # FILTRO SITUAÇÃO FINANCEIRA
+
+        if situacao_financeira:
+
+            sql += """
+                AND a.situacao_financeira = %s
+            """
+
+            parametros.append(
+                situacao_financeira
             )
 
 
@@ -161,18 +193,11 @@ def registrar_rotas(app):
 
             WHERE 1=1
         """
-        if situacao_financeira:
-
-            sql_exames += """
-                AND a.situacao_financeira = %s
-            """
-
-            parametros_exames.append(
-                situacao_financeira
-            )
 
         parametros_exames = []
 
+
+        # FILTRO CREDENCIADA
 
         if credenciada_id:
 
@@ -184,6 +209,8 @@ def registrar_rotas(app):
                 credenciada_id
             )
 
+
+        # FILTRO MÊS
 
         if mes:
 
@@ -199,6 +226,8 @@ def registrar_rotas(app):
             )
 
 
+        # FILTRO ANO
+
         if ano:
 
             sql_exames += """
@@ -213,14 +242,16 @@ def registrar_rotas(app):
             )
 
 
-        if tipo:
+        # FILTRO SITUAÇÃO FINANCEIRA
+
+        if situacao_financeira:
 
             sql_exames += """
-                AND a.tipo_atendimento = %s
+                AND a.situacao_financeira = %s
             """
 
             parametros_exames.append(
-                tipo
+                situacao_financeira
             )
 
 
@@ -407,21 +438,27 @@ def registrar_rotas(app):
             )
 
 
-            if hasattr(
-                item["data_atendimento"],
-                "strftime"
-            ):
+            if item["data_atendimento"]:
 
-                data_atendimento = (
-                    item["data_atendimento"]
-                    .strftime("%d/%m/%Y")
-                )
+                if hasattr(
+                    item["data_atendimento"],
+                    "strftime"
+                ):
+
+                    data_atendimento = (
+                        item["data_atendimento"]
+                        .strftime("%d/%m/%Y")
+                    )
+
+                else:
+
+                    data_atendimento = str(
+                        item["data_atendimento"]
+                    )
 
             else:
 
-                data_atendimento = str(
-                    item["data_atendimento"]
-                )
+                data_atendimento = ""
 
 
             valor = item["valor"] or 0
@@ -466,6 +503,10 @@ def registrar_rotas(app):
 
             total_geral += float(valor)
 
+
+        # ==================================================
+        # TOTAL DOS ATENDIMENTOS
+        # ==================================================
 
         tabela.append(
             [
@@ -603,7 +644,7 @@ def registrar_rotas(app):
 
 
         # ==================================================
-        # DETALHAMENTO DOS EXAMES NO PDF
+        # DETALHAMENTO DOS EXAMES
         # ==================================================
 
         elementos.append(
@@ -704,6 +745,10 @@ def registrar_rotas(app):
 
             total_exames += float(total)
 
+
+        # ==================================================
+        # TOTAL DOS EXAMES
+        # ==================================================
 
         tabela_exames.append(
             [
@@ -829,15 +874,17 @@ def registrar_rotas(app):
 
         conexao.close()
 
+        nome_arquivo = f"{nome_credenciada} - {mes or 'Todos'}-{ano or ''} - {tipo or 'Faturar'}.pdf"
+
+        nome_arquivo = re.sub(
+            r'[\\/:\*?"<>|]',
+            '',
+            nome_arquivo
+        )
 
         return send_file(
             arquivo.name,
-
             as_attachment=True,
-
-            download_name=(
-                "Relatorio_Faturamento.pdf"
-            ),
-
+            download_name=nome_arquivo,
             mimetype="application/pdf"
         )

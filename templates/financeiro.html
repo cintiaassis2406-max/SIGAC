@@ -317,36 +317,113 @@
 
     <div class="card-body">
 
-        <form method="GET">
+        <div class="row">
 
-            <input type="hidden" name="credenciada" value="{{ credenciada_id }}">
-            <input type="hidden" name="mes" value="{{ mes }}">
-            <input type="hidden" name="ano" value="{{ ano }}">
+            <div class="col-md-4">
 
-            <div class="row">
+                <label class="form-label">
+                    Tipo de Relatório
+                </label>
 
-                <div class="col-md-4">
+                <select
+                    id="situacao_financeira"
+                    class="form-select">
 
-                    <label class="form-label">
-                        Tipo de Relatório
-                    </label>
+                    <option value="FATURAR">
+                        Faturada
+                    </option>
 
-                    <select
-                        name="tipo"
-                        class="form-select">
+                    <option value="PARTICULAR">
+                        Particular
+                    </option>
 
-                        <option value="Faturar">
-                            Faturar
-                        </option>
+                </select>
 
-                        <option value="Particular">
-                            Particular
-                        </option>
+            </div>
 
-                    </select>
+            <div class="col-md-4 d-flex align-items-end">
 
-                </div>
+                <a
+                    id="btn_pdf"
+                    href="/gerar_pdf?credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}&situacao_financeira=FATURAR"
+                    class="btn btn-success me-2">
 
+                    📄 Gerar PDF
+
+                </a>
+
+                <a
+                    id="btn_excel"
+                    href="/gerar_excel?credenciada={{ credenciada_id }}&mes={{ mes }}&ano={{ ano }}&situacao_financeira=FATURAR"
+                    class="btn btn-primary">
+
+                    📊 Gerar Excel
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+    const seletor =
+        document.getElementById("situacao_financeira");
+
+    const btnPdf =
+        document.getElementById("btn_pdf");
+
+    const btnExcel =
+        document.getElementById("btn_excel");
+
+
+    function atualizarRelatorios() {
+
+        const situacao =
+            seletor.value;
+
+
+        const credenciada =
+            "{{ credenciada_id }}";
+
+        const mes =
+            "{{ mes }}";
+
+        const ano =
+            "{{ ano }}";
+
+
+        btnPdf.href =
+            "/gerar_pdf"
+            + "?credenciada=" + encodeURIComponent(credenciada)
+            + "&mes=" + encodeURIComponent(mes)
+            + "&ano=" + encodeURIComponent(ano)
+            + "&situacao_financeira=" + encodeURIComponent(situacao);
+
+
+        btnExcel.href =
+            "/gerar_excel"
+            + "?credenciada=" + encodeURIComponent(credenciada)
+            + "&mes=" + encodeURIComponent(mes)
+            + "&ano=" + encodeURIComponent(ano)
+            + "&situacao_financeira=" + encodeURIComponent(situacao);
+
+    }
+
+
+    seletor.addEventListener(
+        "change",
+        atualizarRelatorios
+    );
+
+
+    atualizarRelatorios();
+
+</script>
                 <div class="col-md-4 d-flex align-items-end">
 
                     <a
