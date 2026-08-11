@@ -25,13 +25,16 @@ def registrar_rotas(app):
 
         if credenciada_id:
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT nome
                 FROM credenciadas
                 WHERE id = %s
-            """, (
-                credenciada_id,
-            ))
+                """,
+                (
+                    credenciada_id,
+                )
+            )
 
             resultado_credenciada = cursor.fetchone()
 
@@ -41,6 +44,10 @@ def registrar_rotas(app):
                     resultado_credenciada["nome"]
                 )
 
+
+        # ==================================================
+        # ATENDIMENTOS
+        # ==================================================
 
         sql = """
             SELECT
@@ -61,7 +68,6 @@ def registrar_rotas(app):
 
             WHERE 1=1
         """
-
 
         parametros = []
 
@@ -131,8 +137,97 @@ def registrar_rotas(app):
             parametros
         )
 
-
         dados = cursor.fetchall()
+
+
+        # ==================================================
+        # DETALHAMENTO DOS EXAMES
+        # ==================================================
+
+        sql_exames = """
+            SELECT
+                ae.nome_exame,
+                ae.valor_exame,
+                COUNT(*) AS quantidade,
+                SUM(ae.valor_exame) AS total
+
+            FROM atendimento_exames ae
+
+            INNER JOIN atendimentos a
+                ON a.id = ae.atendimento_id
+
+            WHERE 1=1
+        """
+
+        parametros_exames = []
+
+
+        if credenciada_id:
+
+            sql_exames += """
+                AND a.credenciada_id = %s
+            """
+
+            parametros_exames.append(
+                credenciada_id
+            )
+
+
+        if mes:
+
+            sql_exames += """
+                AND TO_CHAR(
+                    a.data_atendimento,
+                    'MM'
+                ) = %s
+            """
+
+            parametros_exames.append(
+                f"{int(mes):02}"
+            )
+
+
+        if ano:
+
+            sql_exames += """
+                AND TO_CHAR(
+                    a.data_atendimento,
+                    'YYYY'
+                ) = %s
+            """
+
+            parametros_exames.append(
+                str(ano)
+            )
+
+
+        if tipo:
+
+            sql_exames += """
+                AND a.tipo_atendimento = %s
+            """
+
+            parametros_exames.append(
+                tipo
+            )
+
+
+        sql_exames += """
+            GROUP BY
+                ae.nome_exame,
+                ae.valor_exame
+
+            ORDER BY
+                ae.nome_exame
+        """
+
+
+        cursor.execute(
+            sql_exames,
+            parametros_exames
+        )
+
+        detalhamento_exames = cursor.fetchall()
 
 
         # ==================================================
@@ -165,6 +260,10 @@ def registrar_rotas(app):
         ws.append([])
 
 
+        # ==================================================
+        # TABELA DE ATENDIMENTOS
+        # ==================================================
+
         ws.append([
             "Colaborador",
             "Empresa",
@@ -193,7 +292,7 @@ def registrar_rotas(app):
 
 
         # ==================================================
-        # DADOS
+        # DADOS DOS ATENDIMENTOS
         # ==================================================
 
         total_geral = 0
@@ -248,7 +347,7 @@ def registrar_rotas(app):
 
 
         # ==================================================
-        # TOTAL
+        # TOTAL DOS ATENDIMENTOS
         # ==================================================
 
         ws.append([])
@@ -270,8 +369,11 @@ def registrar_rotas(app):
         ])
 
 
+        ultima_linha_atendimentos = ws.max_row
+
+
         # ==================================================
-        # FORMATAÇÃO DAS CÉLULAS
+        # FORMATAÇÃO DOS DADOS
         # ==================================================
 
         for linha in ws.iter_rows():
@@ -288,17 +390,15 @@ def registrar_rotas(app):
         # FORMATAÇÃO DO TOTAL
         # ==================================================
 
-        ultima_linha = ws.max_row
-
         ws.cell(
-            row=ultima_linha,
+            row=ultima_linha_atendimentos,
             column=5
         ).font = Font(
             bold=True
         )
 
         ws.cell(
-            row=ultima_linha,
+            row=ultima_linha_atendimentos,
             column=6
         ).font = Font(
             bold=True
@@ -311,7 +411,7 @@ def registrar_rotas(app):
 
         for linha in range(
             6,
-            ultima_linha + 1
+            ultima_linha_atendimentos + 1
         ):
 
             ws.cell(
@@ -320,6 +420,157 @@ def registrar_rotas(app):
             ).number_format = (
                 'R$ #,##0.00'
             )
+
+
+        # ==================================================
+        # DETALHAMENTO DOS EXAMES
+        # ==================================================
+
+        ws.append([])
+
+        ws.append([
+            "DETALHAMENTO DOS EXAMES REALIZADOS"
+        ])
+
+        ws.append([])
+
+        ws.append([
+            "Exame",
+            "Valor Unitário",
+            "Quantidade",
+            "Total"
+        ])
+
+
+        linha_cabecalho_exames = ws.max_row
+
+
+        # ==================================================
+        # FORMATAÇÃO DO CABEÇALHO DOS EXAMES
+        # ==================================================
+
+        for celula in ws[linha_cabecalho_exames]:
+
+            celula.font = Font(
+                bold=True
+            )
+
+            celula.alignment = Alignment(
+                horizontal="center",
+                vertical="center",
+                wrap_text=True
+            )
+
+
+        # ==================================================
+        # DADOS DOS EXAMES
+        # ==================================================
+
+        total_exames = 0
+
+
+        for exame in detalhamento_exames:
+
+            nome_exame = (
+                exame["nome_exame"]
+                or ""
+            )
+
+            valor_unitario = (
+                exame["valor_exame"]
+                or 0
+            )
+
+            quantidade = (
+                exame["quantidade"]
+                or 0
+            )
+
+            total = (
+                exame["total"]
+                or 0
+            )
+
+
+            ws.append([
+
+                nome_exame,
+
+                float(valor_unitario),
+
+                quantidade,
+
+                float(total)
+
+            ])
+
+
+            total_exames += float(total)
+
+
+        # ==================================================
+        # TOTAL DOS EXAMES
+        # ==================================================
+
+        ws.append([])
+
+        ws.append([
+
+            "",
+
+            "",
+
+            "TOTAL",
+
+            total_exames
+
+        ])
+
+
+        ultima_linha = ws.max_row
+
+
+        # ==================================================
+        # FORMATAÇÃO DOS VALORES DOS EXAMES
+        # ==================================================
+
+        for linha in range(
+            linha_cabecalho_exames + 1,
+            ultima_linha + 1
+        ):
+
+            ws.cell(
+                row=linha,
+                column=2
+            ).number_format = (
+                'R$ #,##0.00'
+            )
+
+            ws.cell(
+                row=linha,
+                column=4
+            ).number_format = (
+                'R$ #,##0.00'
+            )
+
+
+        # ==================================================
+        # FORMATAÇÃO DO TOTAL DOS EXAMES
+        # ==================================================
+
+        ws.cell(
+            row=ultima_linha,
+            column=3
+        ).font = Font(
+            bold=True
+        )
+
+        ws.cell(
+            row=ultima_linha,
+            column=4
+        ).font = Font(
+            bold=True
+        )
 
 
         # ==================================================
@@ -332,7 +583,7 @@ def registrar_rotas(app):
 
             "B": 35,
 
-            "C": 14,
+            "C": 18,
 
             "D": 20,
 
@@ -356,7 +607,7 @@ def registrar_rotas(app):
 
         for linha in range(
             6,
-            ultima_linha + 1
+            ws.max_row + 1
         ):
 
             ws.row_dimensions[
@@ -375,10 +626,10 @@ def registrar_rotas(app):
         # FILTRO NO CABEÇALHO
         # ==================================================
 
-        if ws.max_row >= 5:
+        if ultima_linha_atendimentos >= 5:
 
             ws.auto_filter.ref = (
-                f"A5:F{ws.max_row}"
+                f"A5:F{ultima_linha_atendimentos}"
             )
 
 
