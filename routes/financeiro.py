@@ -145,19 +145,26 @@ def registrar_rotas(app):
         if ano:
 
             sql += """
-               AND EXTRACT(YEAR FROM a.data_atendimento) = %s
+                AND EXTRACT(YEAR FROM a.data_atendimento) = %s
             """
 
-            parametros.append(int(ano))
-            if situacao_financeira:
+            parametros.append(
+                int(ano)
+            )
 
-                sql += """
-                    AND a.situacao_financeira = %s
-                """
+        # ==========================
+        # FILTRO SITUAÇÃO FINANCEIRA
+        # ==========================
 
-                parametros.append(
-                    situacao_financeira
-                )
+        if situacao_financeira:
+
+            sql += """
+                AND a.situacao_financeira = %s
+            """
+
+            parametros.append(
+                situacao_financeira
+            )
 
         # ==========================
         # AGRUPAMENTO
@@ -165,16 +172,16 @@ def registrar_rotas(app):
 
         sql += """
 
-            GROUP BY
+                GROUP BY
 
-                ae.exame_id,
-                ae.nome_exame
+                    ae.exame_id,
+                    ae.nome_exame
 
-            ORDER BY
+                ORDER BY
 
-                ae.nome_exame
+                    ae.nome_exame
 
-        """
+            """
 
         cursor.execute(sql, parametros)
 
@@ -193,7 +200,8 @@ def registrar_rotas(app):
             total_geral += item["valor_total"]
 
             total_exames += item["quantidade"]
-                    # ==========================
+
+        # ==========================
         # TOTAL DE ATENDIMENTOS
         # ==========================
 

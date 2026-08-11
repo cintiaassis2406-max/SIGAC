@@ -124,35 +124,6 @@ def registrar_rotas(app):
             )
 
         # ==================================================
-        # FILTRO TIPO DE ATENDIMENTO
-        # ==================================================
-
-        if tipo:
-
-            sql += """
-                AND a.tipo_atendimento = %s
-            """
-
-            parametros.append(
-                tipo
-            )
-
-        # ==================================================
-        # FILTRO SITUAÇÃO FINANCEIRA
-        # PARTICULAR / FATURADA
-        # ==================================================
-
-        if situacao_financeira:
-
-            sql += """
-                AND a.situacao_financeira = %s
-            """
-
-            parametros.append(
-                situacao_financeira
-            )
-
-        # ==================================================
         # AGRUPAMENTO
         # ==================================================
 
@@ -254,21 +225,13 @@ def registrar_rotas(app):
             parametros_exames.append(
                 tipo
             )
-
         # ==================================================
         # FILTRO SITUAÇÃO FINANCEIRA
-        # PARTICULAR / FATURADA
         # ==================================================
 
-        if situacao_financeira:
-
-            sql_exames += """
-                AND a.situacao_financeira = %s
-            """
-
-            parametros_exames.append(
-                situacao_financeira
-            )
+        # Não aplicar este filtro no detalhamento dos exames.
+        # O detalhamento deve acompanhar os atendimentos
+        # selecionados pelo período e pela credenciada.
 
         # ==================================================
         # AGRUPAMENTO DOS EXAMES
