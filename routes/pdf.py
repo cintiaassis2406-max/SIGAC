@@ -161,6 +161,15 @@ def registrar_rotas(app):
 
             WHERE 1=1
         """
+        if situacao_financeira:
+
+            sql_exames += """
+                AND a.situacao_financeira = %s
+            """
+
+            parametros_exames.append(
+                situacao_financeira
+            )
 
         parametros_exames = []
 

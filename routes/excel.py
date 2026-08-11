@@ -3,7 +3,6 @@ from database.database import conectar
 
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
-from openpyxl.utils import get_column_letter
 
 import tempfile
 
@@ -20,6 +19,11 @@ def registrar_rotas(app):
         mes = request.args.get("mes")
         ano = request.args.get("ano")
         tipo = request.args.get("tipo")
+
+        situacao_financeira = request.args.get(
+            "situacao_financeira",
+            ""
+        )
 
         nome_credenciada = ""
 
@@ -43,7 +47,6 @@ def registrar_rotas(app):
                 nome_credenciada = (
                     resultado_credenciada["nome"]
                 )
-
 
         # ==================================================
         # ATENDIMENTOS
@@ -71,6 +74,9 @@ def registrar_rotas(app):
 
         parametros = []
 
+        # ==================================================
+        # FILTRO CREDENCIADA
+        # ==================================================
 
         if credenciada_id:
 
@@ -82,6 +88,9 @@ def registrar_rotas(app):
                 credenciada_id
             )
 
+        # ==================================================
+        # FILTRO MÊS
+        # ==================================================
 
         if mes:
 
@@ -96,6 +105,9 @@ def registrar_rotas(app):
                 f"{int(mes):02}"
             )
 
+        # ==================================================
+        # FILTRO ANO
+        # ==================================================
 
         if ano:
 
@@ -110,6 +122,9 @@ def registrar_rotas(app):
                 str(ano)
             )
 
+        # ==================================================
+        # FILTRO TIPO DE ATENDIMENTO
+        # ==================================================
 
         if tipo:
 
@@ -121,6 +136,24 @@ def registrar_rotas(app):
                 tipo
             )
 
+        # ==================================================
+        # FILTRO SITUAÇÃO FINANCEIRA
+        # PARTICULAR / FATURADA
+        # ==================================================
+
+        if situacao_financeira:
+
+            sql += """
+                AND a.situacao_financeira = %s
+            """
+
+            parametros.append(
+                situacao_financeira
+            )
+
+        # ==================================================
+        # AGRUPAMENTO
+        # ==================================================
 
         sql += """
             GROUP BY
@@ -131,14 +164,12 @@ def registrar_rotas(app):
                 a.colaborador
         """
 
-
         cursor.execute(
             sql,
             parametros
         )
 
         dados = cursor.fetchall()
-
 
         # ==================================================
         # DETALHAMENTO DOS EXAMES
@@ -161,6 +192,9 @@ def registrar_rotas(app):
 
         parametros_exames = []
 
+        # ==================================================
+        # FILTRO CREDENCIADA
+        # ==================================================
 
         if credenciada_id:
 
@@ -172,6 +206,9 @@ def registrar_rotas(app):
                 credenciada_id
             )
 
+        # ==================================================
+        # FILTRO MÊS
+        # ==================================================
 
         if mes:
 
@@ -186,6 +223,9 @@ def registrar_rotas(app):
                 f"{int(mes):02}"
             )
 
+        # ==================================================
+        # FILTRO ANO
+        # ==================================================
 
         if ano:
 
@@ -200,6 +240,9 @@ def registrar_rotas(app):
                 str(ano)
             )
 
+        # ==================================================
+        # FILTRO TIPO DE ATENDIMENTO
+        # ==================================================
 
         if tipo:
 
@@ -211,6 +254,24 @@ def registrar_rotas(app):
                 tipo
             )
 
+        # ==================================================
+        # FILTRO SITUAÇÃO FINANCEIRA
+        # PARTICULAR / FATURADA
+        # ==================================================
+
+        if situacao_financeira:
+
+            sql_exames += """
+                AND a.situacao_financeira = %s
+            """
+
+            parametros_exames.append(
+                situacao_financeira
+            )
+
+        # ==================================================
+        # AGRUPAMENTO DOS EXAMES
+        # ==================================================
 
         sql_exames += """
             GROUP BY
@@ -221,14 +282,12 @@ def registrar_rotas(app):
                 ae.nome_exame
         """
 
-
         cursor.execute(
             sql_exames,
             parametros_exames
         )
 
         detalhamento_exames = cursor.fetchall()
-
 
         # ==================================================
         # CRIAR EXCEL
@@ -239,7 +298,6 @@ def registrar_rotas(app):
         ws = wb.active
 
         ws.title = "Faturamento"
-
 
         # ==================================================
         # CABEÇALHO
@@ -257,8 +315,11 @@ def registrar_rotas(app):
             f"Período: {mes or ''}/{ano or ''}"
         ])
 
-        ws.append([])
+        ws.append([
+            f"Situação: {situacao_financeira or 'Todas'}"
+        ])
 
+        ws.append([])
 
         # ==================================================
         # TABELA DE ATENDIMENTOS
@@ -273,12 +334,11 @@ def registrar_rotas(app):
             "Valor"
         ])
 
-
         # ==================================================
         # FORMATAÇÃO DO CABEÇALHO
         # ==================================================
 
-        for celula in ws[5]:
+        for celula in ws[6]:
 
             celula.font = Font(
                 bold=True
@@ -290,13 +350,11 @@ def registrar_rotas(app):
                 wrap_text=True
             )
 
-
         # ==================================================
         # DADOS DOS ATENDIMENTOS
         # ==================================================
 
         total_geral = 0
-
 
         for item in dados:
 
@@ -322,29 +380,18 @@ def registrar_rotas(app):
 
                 data_atendimento = ""
 
-
             valor = item["valor"] or 0
 
-
             ws.append([
-
                 item["colaborador"] or "",
-
                 item["empresa"] or "",
-
                 data_atendimento,
-
                 item["tipo_atendimento"] or "",
-
                 item["exames"] or "",
-
                 float(valor)
-
             ])
 
-
             total_geral += float(valor)
-
 
         # ==================================================
         # TOTAL DOS ATENDIMENTOS
@@ -353,24 +400,15 @@ def registrar_rotas(app):
         ws.append([])
 
         ws.append([
-
             "",
-
             "",
-
             "",
-
             "",
-
             "TOTAL",
-
             total_geral
-
         ])
 
-
         ultima_linha_atendimentos = ws.max_row
-
 
         # ==================================================
         # FORMATAÇÃO DOS DADOS
@@ -384,7 +422,6 @@ def registrar_rotas(app):
                     vertical="top",
                     wrap_text=True
                 )
-
 
         # ==================================================
         # FORMATAÇÃO DO TOTAL
@@ -404,13 +441,12 @@ def registrar_rotas(app):
             bold=True
         )
 
-
         # ==================================================
         # FORMATO DOS VALORES
         # ==================================================
 
         for linha in range(
-            6,
+            7,
             ultima_linha_atendimentos + 1
         ):
 
@@ -420,7 +456,6 @@ def registrar_rotas(app):
             ).number_format = (
                 'R$ #,##0.00'
             )
-
 
         # ==================================================
         # DETALHAMENTO DOS EXAMES
@@ -441,9 +476,7 @@ def registrar_rotas(app):
             "Total"
         ])
 
-
         linha_cabecalho_exames = ws.max_row
-
 
         # ==================================================
         # FORMATAÇÃO DO CABEÇALHO DOS EXAMES
@@ -461,13 +494,11 @@ def registrar_rotas(app):
                 wrap_text=True
             )
 
-
         # ==================================================
         # DADOS DOS EXAMES
         # ==================================================
 
         total_exames = 0
-
 
         for exame in detalhamento_exames:
 
@@ -491,22 +522,14 @@ def registrar_rotas(app):
                 or 0
             )
 
-
             ws.append([
-
                 nome_exame,
-
                 float(valor_unitario),
-
                 quantidade,
-
                 float(total)
-
             ])
 
-
             total_exames += float(total)
-
 
         # ==================================================
         # TOTAL DOS EXAMES
@@ -515,20 +538,13 @@ def registrar_rotas(app):
         ws.append([])
 
         ws.append([
-
             "",
-
             "",
-
             "TOTAL",
-
             total_exames
-
         ])
 
-
         ultima_linha = ws.max_row
-
 
         # ==================================================
         # FORMATAÇÃO DOS VALORES DOS EXAMES
@@ -553,7 +569,6 @@ def registrar_rotas(app):
                 'R$ #,##0.00'
             )
 
-
         # ==================================================
         # FORMATAÇÃO DO TOTAL DOS EXAMES
         # ==================================================
@@ -572,27 +587,18 @@ def registrar_rotas(app):
             bold=True
         )
 
-
         # ==================================================
         # LARGURA DAS COLUNAS
         # ==================================================
 
         larguras = {
-
             "A": 32,
-
             "B": 35,
-
             "C": 18,
-
             "D": 20,
-
             "E": 60,
-
             "F": 18
-
         }
-
 
         for coluna, largura in larguras.items():
 
@@ -600,13 +606,12 @@ def registrar_rotas(app):
                 coluna
             ].width = largura
 
-
         # ==================================================
         # ALTURA DAS LINHAS
         # ==================================================
 
         for linha in range(
-            6,
+            7,
             ws.max_row + 1
         ):
 
@@ -614,24 +619,21 @@ def registrar_rotas(app):
                 linha
             ].height = 30
 
-
         # ==================================================
         # CONGELAR CABEÇALHO
         # ==================================================
 
-        ws.freeze_panes = "A6"
-
+        ws.freeze_panes = "A7"
 
         # ==================================================
         # FILTRO NO CABEÇALHO
         # ==================================================
 
-        if ultima_linha_atendimentos >= 5:
+        if ultima_linha_atendimentos >= 6:
 
             ws.auto_filter.ref = (
-                f"A5:F{ultima_linha_atendimentos}"
+                f"A6:F{ultima_linha_atendimentos}"
             )
-
 
         # ==================================================
         # CRIAR ARQUIVO
@@ -642,28 +644,20 @@ def registrar_rotas(app):
             suffix=".xlsx"
         )
 
-
         wb.save(
             arquivo.name
         )
 
-
         conexao.close()
 
-
         return send_file(
-
             arquivo.name,
-
             as_attachment=True,
-
             download_name=(
                 "Relatorio_Faturamento.xlsx"
             ),
-
             mimetype=(
                 "application/vnd.openxmlformats-officedocument."
                 "spreadsheetml.sheet"
             )
-
         )

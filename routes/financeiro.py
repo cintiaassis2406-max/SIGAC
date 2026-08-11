@@ -68,6 +68,10 @@ def registrar_rotas(app):
         credenciada_id = request.args.get("credenciada", "")
         mes = request.args.get("mes", "")
         ano = request.args.get("ano", str(datetime.now().year))
+        situacao_financeira = request.args.get(
+            "situacao_financeira",
+            ""
+        )
 
         # ==========================
         # LISTA DE CREDENCIADAS
@@ -145,6 +149,15 @@ def registrar_rotas(app):
             """
 
             parametros.append(int(ano))
+            if situacao_financeira:
+
+                sql += """
+                    AND a.situacao_financeira = %s
+                """
+
+                parametros.append(
+                    situacao_financeira
+                )
 
         # ==========================
         # AGRUPAMENTO
