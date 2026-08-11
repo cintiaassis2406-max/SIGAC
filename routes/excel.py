@@ -2,7 +2,8 @@ from flask import send_file, request
 from database.database import conectar
 
 from openpyxl import Workbook
-from openpyxl.styles import Font
+from openpyxl.styles import Font, Alignment
+from openpyxl.utils import get_column_letter
 
 import tempfile
 
@@ -23,18 +24,22 @@ def registrar_rotas(app):
         nome_credenciada = ""
 
         if credenciada_id:
-           
-           cursor.execute("""
-            SELECT nome
-            FROM credenciadas
-            WHERE id = %s
-        """, (credenciada_id,))
 
-        resultado_credenciada = cursor.fetchone()
+            cursor.execute("""
+                SELECT nome
+                FROM credenciadas
+                WHERE id = %s
+            """, (
+                credenciada_id,
+            ))
 
-        if resultado_credenciada:
-            nome_credenciada = resultado_credenciada["nome"]
+            resultado_credenciada = cursor.fetchone()
 
+            if resultado_credenciada:
+
+                nome_credenciada = (
+                    resultado_credenciada["nome"]
+                )
 
 
         sql = """
@@ -64,7 +69,7 @@ def registrar_rotas(app):
         if credenciada_id:
 
             sql += """
-                AND a.credenciada_id=%s
+                AND a.credenciada_id = %s
             """
 
             parametros.append(
@@ -75,7 +80,10 @@ def registrar_rotas(app):
         if mes:
 
             sql += """
-                AND TO_CHAR(a.data_atendimento,'MM')=%s
+                AND TO_CHAR(
+                    a.data_atendimento,
+                    'MM'
+                ) = %s
             """
 
             parametros.append(
@@ -86,20 +94,26 @@ def registrar_rotas(app):
         if ano:
 
             sql += """
-                AND TO_CHAR(a.data_atendimento,'YYYY')=%s
+                AND TO_CHAR(
+                    a.data_atendimento,
+                    'YYYY'
+                ) = %s
             """
 
             parametros.append(
                 str(ano)
             )
 
+
         if tipo:
 
             sql += """
-                AND a.situacao_atendimento = %s
+                AND a.tipo_atendimento = %s
             """
 
-            parametros.append(tipo)
+            parametros.append(
+                tipo
+            )
 
 
         sql += """
@@ -121,11 +135,20 @@ def registrar_rotas(app):
         dados = cursor.fetchall()
 
 
+        # ==================================================
+        # CRIAR EXCEL
+        # ==================================================
+
         wb = Workbook()
 
         ws = wb.active
 
         ws.title = "Faturamento"
+
+
+        # ==================================================
+        # CABEÇALHO
+        # ==================================================
 
         ws.append([
             "SIGAC - RELATÓRIO DE FATURAMENTO"
@@ -136,7 +159,7 @@ def registrar_rotas(app):
         ])
 
         ws.append([
-            f"Período: {mes}/{ano}"
+            f"Período: {mes or ''}/{ano or ''}"
         ])
 
         ws.append([])
@@ -152,56 +175,216 @@ def registrar_rotas(app):
         ])
 
 
+        # ==================================================
+        # FORMATAÇÃO DO CABEÇALHO
+        # ==================================================
+
         for celula in ws[5]:
 
             celula.font = Font(
                 bold=True
             )
 
+            celula.alignment = Alignment(
+                horizontal="center",
+                vertical="center",
+                wrap_text=True
+            )
+
+
+        # ==================================================
+        # DADOS
+        # ==================================================
 
         total_geral = 0
 
 
         for item in dados:
 
+            if item["data_atendimento"]:
+
+                if hasattr(
+                    item["data_atendimento"],
+                    "strftime"
+                ):
+
+                    data_atendimento = (
+                        item["data_atendimento"]
+                        .strftime("%d/%m/%Y")
+                    )
+
+                else:
+
+                    data_atendimento = str(
+                        item["data_atendimento"]
+                    )
+
+            else:
+
+                data_atendimento = ""
+
+
+            valor = item["valor"] or 0
+
+
             ws.append([
 
-                item["colaborador"],
+                item["colaborador"] or "",
 
-                item["empresa"],
+                item["empresa"] or "",
 
-                item["data_atendimento"].strftime("%d/%m/%Y")
-                if hasattr(item["data_atendimento"], "strftime")
-                else str(item["data_atendimento"])
-                if item["data_atendimento"]
-                else "",
+                data_atendimento,
 
-                item["tipo_atendimento"],
+                item["tipo_atendimento"] or "",
 
-                item["exames"] if item["exames"] else "",
+                item["exames"] or "",
 
-                item["valor"]
+                float(valor)
 
             ])
 
 
-            total_geral += item["valor"]
+            total_geral += float(valor)
 
+
+        # ==================================================
+        # TOTAL
+        # ==================================================
 
         ws.append([])
-
 
         ws.append([
 
             "",
+
             "",
+
             "",
+
             "",
+
             "TOTAL",
+
             total_geral
 
         ])
 
+
+        # ==================================================
+        # FORMATAÇÃO DAS CÉLULAS
+        # ==================================================
+
+        for linha in ws.iter_rows():
+
+            for celula in linha:
+
+                celula.alignment = Alignment(
+                    vertical="top",
+                    wrap_text=True
+                )
+
+
+        # ==================================================
+        # FORMATAÇÃO DO TOTAL
+        # ==================================================
+
+        ultima_linha = ws.max_row
+
+        ws.cell(
+            row=ultima_linha,
+            column=5
+        ).font = Font(
+            bold=True
+        )
+
+        ws.cell(
+            row=ultima_linha,
+            column=6
+        ).font = Font(
+            bold=True
+        )
+
+
+        # ==================================================
+        # FORMATO DOS VALORES
+        # ==================================================
+
+        for linha in range(
+            6,
+            ultima_linha + 1
+        ):
+
+            ws.cell(
+                row=linha,
+                column=6
+            ).number_format = (
+                'R$ #,##0.00'
+            )
+
+
+        # ==================================================
+        # LARGURA DAS COLUNAS
+        # ==================================================
+
+        larguras = {
+
+            "A": 32,
+
+            "B": 35,
+
+            "C": 14,
+
+            "D": 20,
+
+            "E": 60,
+
+            "F": 18
+
+        }
+
+
+        for coluna, largura in larguras.items():
+
+            ws.column_dimensions[
+                coluna
+            ].width = largura
+
+
+        # ==================================================
+        # ALTURA DAS LINHAS
+        # ==================================================
+
+        for linha in range(
+            6,
+            ultima_linha + 1
+        ):
+
+            ws.row_dimensions[
+                linha
+            ].height = 30
+
+
+        # ==================================================
+        # CONGELAR CABEÇALHO
+        # ==================================================
+
+        ws.freeze_panes = "A6"
+
+
+        # ==================================================
+        # FILTRO NO CABEÇALHO
+        # ==================================================
+
+        if ws.max_row >= 5:
+
+            ws.auto_filter.ref = (
+                f"A5:F{ws.max_row}"
+            )
+
+
+        # ==================================================
+        # CRIAR ARQUIVO
+        # ==================================================
 
         arquivo = tempfile.NamedTemporaryFile(
             delete=False,
@@ -223,8 +406,13 @@ def registrar_rotas(app):
 
             as_attachment=True,
 
-            download_name="Relatorio_Faturamento.xlsx",
+            download_name=(
+                "Relatorio_Faturamento.xlsx"
+            ),
 
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            mimetype=(
+                "application/vnd.openxmlformats-officedocument."
+                "spreadsheetml.sheet"
+            )
 
         )

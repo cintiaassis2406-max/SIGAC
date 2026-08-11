@@ -9,7 +9,7 @@ from reportlab.platypus import (
 )
 
 from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 
 import tempfile
@@ -44,7 +44,6 @@ def registrar_rotas(app):
             cred = cursor.fetchone()
 
             if cred:
-
                 nome_credenciada = cred["nome"]
 
 
@@ -68,14 +67,13 @@ def registrar_rotas(app):
             WHERE 1=1
         """
 
-
         parametros = []
 
 
         if credenciada_id:
 
             sql += """
-                AND a.credenciada_id=%s
+                AND a.credenciada_id = %s
             """
 
             parametros.append(
@@ -86,7 +84,10 @@ def registrar_rotas(app):
         if mes:
 
             sql += """
-                AND TO_CHAR(a.data_atendimento,'MM')=%s
+                AND TO_CHAR(
+                    a.data_atendimento,
+                    'MM'
+                ) = %s
             """
 
             parametros.append(
@@ -97,12 +98,16 @@ def registrar_rotas(app):
         if ano:
 
             sql += """
-                AND TO_CHAR(a.data_atendimento,'YYYY')=%s
+                AND TO_CHAR(
+                    a.data_atendimento,
+                    'YYYY'
+                ) = %s
             """
 
             parametros.append(
                 str(ano)
             )
+
 
         if tipo:
 
@@ -110,7 +115,10 @@ def registrar_rotas(app):
                 AND a.tipo_atendimento = %s
             """
 
-            parametros.append(tipo)
+            parametros.append(
+                tipo
+            )
+
 
         sql += """
             GROUP BY
@@ -127,7 +135,6 @@ def registrar_rotas(app):
             parametros
         )
 
-
         dados = cursor.fetchall()
 
 
@@ -139,38 +146,105 @@ def registrar_rotas(app):
 
         pdf = SimpleDocTemplate(
             arquivo.name,
-            pagesize=(29.7 * cm, 21 * cm)
+
+            pagesize=(
+                29.7 * cm,
+                21 * cm
+            ),
+
+            rightMargin=0.7 * cm,
+            leftMargin=0.7 * cm,
+            topMargin=0.8 * cm,
+            bottomMargin=0.8 * cm
         )
 
 
         estilos = getSampleStyleSheet()
 
+
         elementos = []
 
 
+        estilo_titulo = ParagraphStyle(
+            "TituloRelatorio",
+            parent=estilos["Title"],
+            fontName="Helvetica-Bold",
+            fontSize=14,
+            leading=17,
+            alignment=1,
+            spaceAfter=10
+        )
+
+
+        estilo_celula = ParagraphStyle(
+            "Celula",
+            parent=estilos["Normal"],
+            fontName="Helvetica",
+            fontSize=6.5,
+            leading=8,
+            spaceAfter=0,
+            spaceBefore=0,
+            wordWrap="CJK"
+        )
+
+
+        estilo_cabecalho = ParagraphStyle(
+            "Cabecalho",
+            parent=estilos["Normal"],
+            fontName="Helvetica-Bold",
+            fontSize=7,
+            leading=8,
+            alignment=1,
+            spaceAfter=0,
+            spaceBefore=0,
+            wordWrap="CJK"
+        )
+
+
         elementos.append(
-
-    Paragraph(
-        f"""
-        <b>SIGAC - RELATÓRIO DE FATURAMENTO</b><br/>
-        Credenciada: {nome_credenciada}<br/>
-        Período: {mes}/{ano}<br/>
-        """,
-        estilos["Title"]
-    )
-
-)
+            Paragraph(
+                f"""
+                SIGAC - RELATÓRIO DE FATURAMENTO<br/>
+                Credenciada: {nome_credenciada}<br/>
+                Período: {mes or ''}/{ano or ''}
+                """,
+                estilo_titulo
+            )
+        )
 
 
         tabela = [
 
             [
-                "Colaborador",
-                "Empresa",
-                "Data",
-                "Tipo",
-                "Exames",
-                "Valor"
+                Paragraph(
+                    "Colaborador",
+                    estilo_cabecalho
+                ),
+
+                Paragraph(
+                    "Empresa",
+                    estilo_cabecalho
+                ),
+
+                Paragraph(
+                    "Data",
+                    estilo_cabecalho
+                ),
+
+                Paragraph(
+                    "Tipo",
+                    estilo_cabecalho
+                ),
+
+                Paragraph(
+                    "Exames",
+                    estilo_cabecalho
+                ),
+
+                Paragraph(
+                    "Valor",
+                    estilo_cabecalho
+                )
             ]
 
         ]
@@ -181,84 +255,214 @@ def registrar_rotas(app):
 
         for item in dados:
 
-            tabela.append(
+            colaborador = (
+                item["colaborador"]
+                or ""
+            )
 
-                [
+            empresa = (
+                item["empresa"]
+                or ""
+            )
 
-                    item["colaborador"],
+            tipo_atendimento = (
+                item["tipo_atendimento"]
+                or ""
+            )
 
-                    item["empresa"],
-
-                    item["data_atendimento"].strftime("%d/%m/%Y") if hasattr(item["data_atendimento"], "strftime") else str(item["data_atendimento"]),
-
-                    item["tipo_atendimento"],
-
-                    item["exames"] if item["exames"] else "",
-
-                    f'R$ {item["valor"]:.2f}'
-
-                ]
-
+            exames = (
+                item["exames"]
+                or ""
             )
 
 
-            total_geral += item["valor"]
+            if hasattr(
+                item["data_atendimento"],
+                "strftime"
+            ):
 
+                data_atendimento = (
+                    item["data_atendimento"]
+                    .strftime("%d/%m/%Y")
+                )
+
+            else:
+
+                data_atendimento = str(
+                    item["data_atendimento"]
+                )
+
+
+            valor = item["valor"] or 0
+
+
+            tabela.append(
+                [
+
+                    Paragraph(
+                        str(colaborador),
+                        estilo_celula
+                    ),
+
+                    Paragraph(
+                        str(empresa),
+                        estilo_celula
+                    ),
+
+                    Paragraph(
+                        str(data_atendimento),
+                        estilo_celula
+                    ),
+
+                    Paragraph(
+                        str(tipo_atendimento),
+                        estilo_celula
+                    ),
+
+                    Paragraph(
+                        str(exames),
+                        estilo_celula
+                    ),
+
+                    Paragraph(
+                        f"R$ {float(valor):.2f}",
+                        estilo_celula
+                    )
+
+                ]
+            )
+
+
+            total_geral += float(valor)
 
 
         tabela.append(
-
             [
 
                 "",
+
                 "",
+
                 "",
+
                 "",
-                "TOTAL",
-                f'R$ {total_geral:.2f}'
+
+                Paragraph(
+                    "<b>TOTAL</b>",
+                    estilo_cabecalho
+                ),
+
+                Paragraph(
+                    f"<b>R$ {total_geral:.2f}</b>",
+                    estilo_cabecalho
+                )
 
             ]
-
         )
 
 
+        # ==================================================
+        # LARGURA DAS COLUNAS
+        # ==================================================
+
+        larguras_colunas = [
+
+            4.5 * cm,
+
+            4.5 * cm,
+
+            2.2 * cm,
+
+            2.3 * cm,
+
+            9.0 * cm,
+
+            2.3 * cm
+
+        ]
+
+
         tabela_pdf = Table(
-            tabela
+            tabela,
+
+            colWidths=larguras_colunas,
+
+            repeatRows=1,
+
+            splitByRow=1
         )
 
 
         tabela_pdf.setStyle(
-
             TableStyle(
-
                 [
 
                     (
                         "GRID",
-                        (0,0),
-                        (-1,-1),
+                        (0, 0),
+                        (-1, -1),
                         0.5,
                         colors.grey
                     ),
 
                     (
                         "BACKGROUND",
-                        (0,0),
-                        (-1,0),
+                        (0, 0),
+                        (-1, 0),
                         colors.lightgrey
                     ),
 
                     (
-                        "FONTNAME",
-                        (0,0),
-                        (-1,0),
-                        "Helvetica-Bold"
+                        "VALIGN",
+                        (0, 0),
+                        (-1, -1),
+                        "TOP"
+                    ),
+
+                    (
+                        "ALIGN",
+                        (2, 1),
+                        (3, -1),
+                        "CENTER"
+                    ),
+
+                    (
+                        "ALIGN",
+                        (5, 1),
+                        (5, -1),
+                        "RIGHT"
+                    ),
+
+                    (
+                        "LEFTPADDING",
+                        (0, 0),
+                        (-1, -1),
+                        3
+                    ),
+
+                    (
+                        "RIGHTPADDING",
+                        (0, 0),
+                        (-1, -1),
+                        3
+                    ),
+
+                    (
+                        "TOPPADDING",
+                        (0, 0),
+                        (-1, -1),
+                        3
+                    ),
+
+                    (
+                        "BOTTOMPADDING",
+                        (0, 0),
+                        (-1, -1),
+                        3
                     )
 
                 ]
-
             )
-
         )
 
 
@@ -276,13 +480,13 @@ def registrar_rotas(app):
 
 
         return send_file(
-
             arquivo.name,
 
             as_attachment=True,
 
-            download_name="Relatorio_Faturamento.pdf",
+            download_name=(
+                "Relatorio_Faturamento.pdf"
+            ),
 
             mimetype="application/pdf"
-
         )

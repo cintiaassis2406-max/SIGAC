@@ -55,6 +55,7 @@ def registrar_rotas(app):
         cursor = conexao.cursor()
 
         nome = request.form["nome"].strip()
+
         valor = request.form.get(
             "valor",
             "0"
@@ -104,7 +105,6 @@ def registrar_rotas(app):
         conexao = conectar()
         cursor = conexao.cursor()
 
-
         if request.method == "POST":
 
             data_atendimento = request.form["data_atendimento"]
@@ -125,7 +125,6 @@ def registrar_rotas(app):
                 "observacoes",
                 ""
             )
-
 
             cursor.execute("""
                 INSERT INTO atendimentos
@@ -149,16 +148,18 @@ def registrar_rotas(app):
                 observacoes
             ))
 
-
             cursor.execute("SELECT LASTVAL() AS id")
-            atendimento_id = cursor.fetchone()["id"]
 
+            atendimento_id = cursor.fetchone()["id"]
 
             exames = request.form.getlist(
                 "exames"
             )
 
-            print("EXAMES RECEBIDOS:", exames)
+            print(
+                "EXAMES RECEBIDOS:",
+                exames
+            )
 
             for exame_id in exames:
 
@@ -174,6 +175,8 @@ def registrar_rotas(app):
 
                 exame = cursor.fetchone()
 
+                if not exame:
+                    continue
 
                 cursor.execute("""
                     SELECT valor
@@ -202,7 +205,6 @@ def registrar_rotas(app):
                     valor
                 )
 
-
                 cursor.execute("""
                     INSERT INTO atendimento_exames
                     (
@@ -219,167 +221,168 @@ def registrar_rotas(app):
                     valor
                 ))
 
-
             conexao.commit()
 
             conexao.close()
 
             return redirect("/atendimentos")
 
-            # ==================================================
-    # FILTROS / LISTAGEM
-    # ==================================================
 
-    pesquisa = request.args.get(
-        "pesquisa",
-        ""
-    ).strip()
+        # ==================================================
+        # FILTROS / LISTAGEM
+        # ==================================================
 
-    data_pesquisa = request.args.get(
-        "data_pesquisa",
-        ""
-    ).strip()
+        pesquisa = request.args.get(
+            "pesquisa",
+            ""
+        ).strip()
 
-    pagina = request.args.get(
-        "pagina",
-        1,
-        type=int
-    )
+        data_pesquisa = request.args.get(
+            "data_pesquisa",
+            ""
+        ).strip()
 
-    if pagina < 1:
-        pagina = 1
+        pagina = request.args.get(
+            "pagina",
+            1,
+            type=int
+        )
 
-    por_pagina = 10
+        if pagina < 1:
+            pagina = 1
 
-    offset = (pagina - 1) * por_pagina
+        por_pagina = 10
 
-    # ==================================================
-    # CONTAR ATENDIMENTOS
-    # ==================================================
+        offset = (pagina - 1) * por_pagina
 
-    filtros = []
-    parametros = []
 
-    if pesquisa:
+        # ==================================================
+        # CONTAR ATENDIMENTOS
+        # ==================================================
 
-        filtros.append("""
-            (
-                a.colaborador ILIKE %s
-                OR e.nome ILIKE %s
-                OR c.nome ILIKE %s
+        filtros = []
+        parametros = []
+
+        if pesquisa:
+
+            filtros.append("""
+                (
+                    a.colaborador ILIKE %s
+                    OR e.nome ILIKE %s
+                    OR c.nome ILIKE %s
+                )
+            """)
+
+            termo = f"%{pesquisa}%"
+
+            parametros.extend([
+                termo,
+                termo,
+                termo
+            ])
+
+        if data_pesquisa:
+
+            filtros.append("""
+                a.data_atendimento = %s
+            """)
+
+            parametros.append(
+                data_pesquisa
             )
-        """)
 
-        termo = f"%{pesquisa}%"
+        where = ""
 
-        parametros.extend([
-            termo,
-            termo,
-            termo
+        if filtros:
+
+            where = "WHERE " + " AND ".join(filtros)
+
+        cursor.execute(f"""
+            SELECT
+                COUNT(*) AS total
+
+            FROM atendimentos a
+
+            INNER JOIN credenciadas c
+                ON c.id = a.credenciada_id
+
+            INNER JOIN empresas e
+                ON e.id = a.empresa_id
+
+            {where}
+        """, parametros)
+
+        total = cursor.fetchone()["total"]
+
+        total_paginas = (
+            total + por_pagina - 1
+        ) // por_pagina
+
+
+        # ==================================================
+        # LISTAR ATENDIMENTOS
+        # ==================================================
+
+        cursor.execute(f"""
+            SELECT
+                a.id,
+                a.data_atendimento,
+                c.nome AS credenciada,
+                e.nome AS empresa,
+                a.colaborador,
+                a.tipo_atendimento,
+                a.situacao_financeira
+
+            FROM atendimentos a
+
+            INNER JOIN credenciadas c
+                ON c.id = a.credenciada_id
+
+            INNER JOIN empresas e
+                ON e.id = a.empresa_id
+
+            {where}
+
+            ORDER BY a.id DESC
+
+            LIMIT %s
+            OFFSET %s
+        """, parametros + [
+            por_pagina,
+            offset
         ])
 
-    if data_pesquisa:
-
-        filtros.append("""
-            a.data_atendimento = %s
-        """)
-
-        parametros.append(data_pesquisa)
-
-    where = ""
-
-    if filtros:
-
-        where = "WHERE " + " AND ".join(filtros)
-
-    cursor.execute(f"""
-        SELECT
-            COUNT(*) AS total
-
-        FROM atendimentos a
-
-        INNER JOIN credenciadas c
-            ON c.id = a.credenciada_id
-
-        INNER JOIN empresas e
-            ON e.id = a.empresa_id
-
-        {where}
-    """, parametros)
-
-    total = cursor.fetchone()["total"]
-
-    total_paginas = (total + por_pagina - 1) // por_pagina
-
-    # ==================================================
-    # LISTAR ATENDIMENTOS
-    # ==================================================
-
-    cursor.execute(f"""
-        SELECT
-            a.id,
-            a.data_atendimento,
-            c.nome AS credenciada,
-            e.nome AS empresa,
-            a.colaborador,
-            a.tipo_atendimento,
-            a.situacao_financeira
-
-        FROM atendimentos a
-
-        INNER JOIN credenciadas c
-            ON c.id = a.credenciada_id
-
-        INNER JOIN empresas e
-            ON e.id = a.empresa_id
-
-        {where}
-
-        ORDER BY a.id DESC
-
-        LIMIT %s
-        OFFSET %s
-    """, parametros + [
-        por_pagina,
-        offset
-    ])
-
-    lista = cursor.fetchall()
+        lista = cursor.fetchall()
 
 
-    # ==================================================
-    # DADOS PARA CADASTRO
-    # ==================================================
+        # ==================================================
+        # DADOS PARA CADASTRO
+        # ==================================================
 
-    cursor.execute("""
+        cursor.execute("""
             SELECT
                 id,
                 nome
-
             FROM credenciadas
-
             ORDER BY nome
         """)
 
-    credenciadas = cursor.fetchall()
+        credenciadas = cursor.fetchall()
 
 
-
-    cursor.execute("""
+        cursor.execute("""
             SELECT
                 id,
                 nome
-
             FROM exames
-
             WHERE situacao = 'Ativo'
-
             ORDER BY nome
         """)
 
-    exames = cursor.fetchall()
+        exames = cursor.fetchall()
 
-    cursor.execute("""
+
+        cursor.execute("""
             SELECT
                 id,
                 nome,
@@ -388,12 +391,12 @@ def registrar_rotas(app):
             ORDER BY nome
         """)
 
-    empresas = cursor.fetchall()
+        empresas = cursor.fetchall()
 
-    conexao.close()
+        conexao.close()
 
 
-    return render_template(
+        return render_template(
             "atendimentos.html",
             atendimentos=lista,
             credenciadas=credenciadas,
@@ -408,7 +411,6 @@ def registrar_rotas(app):
         )
 
 
-
     # ==================================================
     # BUSCAR EMPRESAS DA CREDENCIADA (AJAX)
     # ==================================================
@@ -421,38 +423,31 @@ def registrar_rotas(app):
         conexao = conectar()
         cursor = conexao.cursor()
 
-
         cursor.execute("""
             SELECT
                 id,
                 nome
-
             FROM empresas
-
             WHERE credenciada_id = %s
-
             ORDER BY nome
         """, (
             credenciada_id,
         ))
 
-
         empresas = cursor.fetchall()
 
-
         conexao.close()
-
 
         return jsonify([
             {
                 "id": empresa["id"],
                 "nome": empresa["nome"]
             }
-
             for empresa in empresas
         ])
 
-        # ==================================================
+
+    # ==================================================
     # EDITAR ATENDIMENTO
     # ==================================================
 
@@ -468,10 +463,18 @@ def registrar_rotas(app):
         if request.method == "POST":
 
             data_atendimento = request.form["data_atendimento"]
+
             credenciada_id = request.form["credenciada"]
+
             empresa_id = request.form["empresa"]
-            colaborador = request.form["colaborador"].strip()
-            tipo_atendimento = request.form["tipo_atendimento"]
+
+            colaborador = request.form[
+                "colaborador"
+            ].strip()
+
+            tipo_atendimento = request.form[
+                "tipo_atendimento"
+            ]
 
             situacao_financeira = request.form.get(
                 "situacao_financeira",
@@ -508,11 +511,15 @@ def registrar_rotas(app):
             cursor.execute("""
                 DELETE FROM atendimento_exames
                 WHERE atendimento_id = %s
-            """, (id,))
+            """, (
+                id,
+            ))
 
-            exames = request.form.getlist("exames")
+            exames_selecionados = request.form.getlist(
+                "exames"
+            )
 
-            for exame_id in exames:
+            for exame_id in exames_selecionados:
 
                 cursor.execute("""
                     SELECT
@@ -520,7 +527,9 @@ def registrar_rotas(app):
                         valor
                     FROM exames
                     WHERE id = %s
-                """, (exame_id,))
+                """, (
+                    exame_id,
+                ))
 
                 exame = cursor.fetchone()
 
@@ -540,8 +549,11 @@ def registrar_rotas(app):
                 preco = cursor.fetchone()
 
                 if preco:
+
                     valor = preco["valor"]
+
                 else:
+
                     valor = exame["valor"]
 
                 cursor.execute("""
@@ -560,31 +572,43 @@ def registrar_rotas(app):
                     valor
                 ))
 
-                conexao.commit()
-                return redirect("/atendimentos")
-            
+            conexao.commit()
+
+            conexao.close()
+
+            return redirect("/atendimentos")
+
+
         cursor.execute("""
             SELECT *
             FROM atendimentos
             WHERE id = %s
-        """, (id,))
+        """, (
+            id,
+        ))
 
         atendimento = cursor.fetchone()
 
         if not atendimento:
+
             conexao.close()
+
             return redirect("/atendimentos")
+
 
         cursor.execute("""
             SELECT exame_id
             FROM atendimento_exames
             WHERE atendimento_id = %s
-        """, (id,))
+        """, (
+            id,
+        ))
 
         exames_selecionados = [
             item["exame_id"]
             for item in cursor.fetchall()
         ]
+
 
         cursor.execute("""
             SELECT
@@ -595,6 +619,7 @@ def registrar_rotas(app):
         """)
 
         credenciadas = cursor.fetchall()
+
 
         cursor.execute("""
             SELECT
@@ -607,6 +632,7 @@ def registrar_rotas(app):
         """)
 
         exames = cursor.fetchall()
+
 
         cursor.execute("""
             SELECT
@@ -629,7 +655,8 @@ def registrar_rotas(app):
             exames=exames,
             exames_selecionados=exames_selecionados
         )
-    
+
+
     # ==================================================
     # VISUALIZAR EXAMES DO ATENDIMENTO
     # ==================================================
@@ -642,38 +669,28 @@ def registrar_rotas(app):
         conexao = conectar()
         cursor = conexao.cursor()
 
-
         cursor.execute("""
             SELECT
                 nome_exame,
                 valor_exame
-
             FROM atendimento_exames
-
             WHERE atendimento_id = %s
-
             ORDER BY nome_exame
-
         """, (
             id,
         ))
 
-
         exames = cursor.fetchall()
 
-
         conexao.close()
-
 
         return jsonify([
             {
                 "nome": exame["nome_exame"],
                 "valor": exame["valor_exame"]
             }
-
             for exame in exames
         ])
-
 
 
     # ==================================================
@@ -688,34 +705,23 @@ def registrar_rotas(app):
         conexao = conectar()
         cursor = conexao.cursor()
 
-
-
         cursor.execute("""
             DELETE FROM atendimento_exames
-
             WHERE atendimento_id = %s
-
         """, (
             id,
         ))
-
-
 
         cursor.execute("""
             DELETE FROM atendimentos
-
             WHERE id = %s
-
         """, (
             id,
         ))
-
-
 
         conexao.commit()
 
         conexao.close()
-
 
         return redirect(
             "/atendimentos"
